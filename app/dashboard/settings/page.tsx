@@ -247,6 +247,29 @@ export default function SettingsPage() {
         }
       }
 
+      // Save/Update profile
+      const literalProfileStr = localStorage.getItem("literal_profile");
+      if (literalProfileStr) {
+        try {
+          const literalProfile = JSON.parse(literalProfileStr);
+          const { error: profileError } = await supabase
+            .from("profiles")
+            .upsert({
+              id: user.id,
+              full_name: literalProfile.name,
+              avatar_url: literalProfile.image,
+              updated_at: new Date().toISOString(),
+            });
+
+          if (profileError) {
+            console.error("Error saving profile:", profileError);
+            // Don't fail the whole sync for this, just log it
+          }
+        } catch (e) {
+          console.error("Error parsing literal profile:", e);
+        }
+      }
+
       setSyncStatus({
         states: readingStates.length,
         progresses: readingProgresses.length,

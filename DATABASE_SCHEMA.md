@@ -1,4 +1,4 @@
-# Database Schema for Reading States
+# Database Schema for Reading States & Communities
 
 ## Tables to Create in Supabase
 
@@ -83,6 +83,20 @@ CREATE POLICY "Users can update their own reading states"
 CREATE POLICY "Users can delete their own reading states"
   ON reading_states FOR DELETE
   USING (auth.uid() = user_id);
+
+-- NEW: Policy to allow viewing reading states of fellow community members
+CREATE POLICY "Community members can view each other's reading states"
+  ON reading_states FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM community_members cm_me
+      JOIN community_members cm_target ON cm_me.community_id = cm_target.community_id
+      WHERE cm_me.user_id = auth.uid()
+      AND cm_target.user_id = reading_states.user_id
+      AND cm_me.status = 'accepted'
+      AND cm_target.status = 'accepted'
+    )
+  );
 ```
 
 ### 3. reading_progresses table
@@ -125,6 +139,165 @@ CREATE POLICY "Users can update their own reading progresses"
 CREATE POLICY "Users can delete their own reading progresses"
   ON reading_progresses FOR DELETE
   USING (auth.uid() = user_id);
+
+-- NEW: Policy to allow viewing reading progresses of fellow community members
+CREATE POLICY "Community members can view each other's reading progresses"
+  ON reading_progresses FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM community_members cm_me
+      JOIN community_members cm_target ON cm_me.community_id = cm_target.community_id
+      WHERE cm_me.user_id = auth.uid()
+      AND cm_target.user_id = reading_progresses.user_id
+      AND cm_me.status = 'accepted'
+      AND cm_target.status = 'accepted'
+    )
+  );
+```
+
+### 4. communities table
+
+```sql
+CREATE TABLE communities (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  created_by UUID NOT NULL REFERENCES auth.users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  image_url TEXT
+);
+
+-- Enable RLS
+ALTER TABLE communities ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Anyone can view communities (or restrict to members?)
+-- Let's allow authenticated users to view communities so they can see invitations
+CREATE POLICY "Authenticated users can view communities"
+  ON communities FOR SELECT
+  USING (auth.role() = 'authenticated');
+
+-- Policy: Authenticated users can create communities
+CREATE POLICY "Authenticated users can create communities"
+  ON communities FOR INSERT
+  WITH CHECK (auth.role() = 'authenticated' AND auth.uid() = created_by);
+
+-- Policy: Creator can update
+CREATE POLICY "Creators can update their communities"
+  ON communities FOR UPDATE
+  USING (auth.uid() = created_by);
+```
+
+### 5. community_members table
+
+```sql
+CREATE TABLE community_members (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  community_id UUID NOT NULL REFERENCES communities(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  role TEXT NOT NULL CHECK (role IN ('admin', 'member')),
+  status TEXT NOT NULL CHECK (status IN ('pending', 'accepted', 'rejected')),
+  invited_by UUID REFERENCES auth.users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(community_id, user_id)
+);
+
+-- Indexes
+CREATE INDEX idx_community_members_community_id ON community_members(community_id);
+CREATE INDEX idx_community_members_user_id ON community_members(user_id);
+
+-- Enable RLS
+ALTER TABLE community_members ENABLE ROW LEVEL SECURITY;
+
+-- Helper function to prevent infinite recursion in policies
+CREATE OR REPLACE FUNCTION is_community_member(_community_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM community_members
+    WHERE community_id = _community_id
+    AND user_id = auth.uid()
+  );
+$$;
+-- Important: Grant execute permission to authenticated users
+GRANT EXECUTE ON FUNCTION is_community_member TO authenticated;
+
+-- Policy: Users can view memberships if they are in the community or invited
+CREATE POLICY "Users can view community memberships"
+  ON community_members FOR SELECT
+  USING (
+    auth.uid() = user_id OR
+    (status = 'accepted' AND is_community_member(community_id))
+  );
+
+-- Policy: Creator/Admins can invite (insert)
+-- Simplified: Any member can invite? Or just admin? Let's say Admin.
+-- For creation: The creator inserts themselves as admin.
+CREATE POLICY "Admins can invite members"
+  ON community_members FOR INSERT
+  WITH CHECK (
+    -- Allow user to add themselves (when creating community)
+    (auth.uid() = user_id AND role = 'admin' AND status = 'accepted') OR
+    -- Allow admins to invite others
+    EXISTS (
+      SELECT 1 FROM community_members cm
+      WHERE cm.community_id = community_members.community_id
+      AND cm.user_id = auth.uid()
+      AND cm.role = 'admin'
+      AND cm.status = 'accepted'
+    )
+  );
+
+-- Policy: Users can update their own status (accept/reject)
+CREATE POLICY "Users can update their own membership status"
+  ON community_members FOR UPDATE
+  USING (auth.uid() = user_id);
+
+-- Policy: Admins can remove members (delete) or users can leave
+CREATE POLICY "Admins or self can remove members"
+  ON community_members FOR DELETE
+  USING (
+    auth.uid() = user_id OR
+    EXISTS (
+      SELECT 1 FROM community_members cm
+      WHERE cm.community_id = community_members.community_id
+      AND cm.user_id = auth.uid()
+      AND cm.role = 'admin'
+      AND cm.status = 'accepted'
+    )
+  );
+```
+
+### 6. profiles table
+
+```sql
+CREATE TABLE profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  full_name TEXT,
+  avatar_url TEXT,
+  email TEXT, -- Optional: synced from auth.users for display ease, but keep in mind privacy
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Public read access
+CREATE POLICY "Public profiles are viewable by everyone"
+  ON profiles FOR SELECT
+  USING (true);
+
+-- Policy: Users can insert their own profile
+CREATE POLICY "Users can insert their own profile"
+  ON profiles FOR INSERT
+  WITH CHECK (auth.uid() = id);
+
+-- Policy: Users can update their own profile
+CREATE POLICY "Users can update own profile"
+  ON profiles FOR UPDATE
+  USING (auth.uid() = id);
 ```
 
 ## How to Apply
@@ -137,6 +310,7 @@ CREATE POLICY "Users can delete their own reading progresses"
 
 ## Notes
 
+- **Profiles**: Added to allow displaying user names/avatars in communities.
 - **Three-table structure**: Books are stored centrally in the `books` table, while user-specific data is in `reading_states` and `reading_progresses`
 - The `user_id` field in reading states and progresses links to the authenticated user in Supabase
 - RLS (Row Level Security) policies ensure users can only access their own reading data
