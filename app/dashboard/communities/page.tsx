@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
+import useSWR from "swr";
 import { CreateCommunityDialog } from "@/components/community/create-community-dialog";
 import { CommunityCard } from "@/components/community/community-card";
 import { createClient } from "@/lib/supabase/client";
@@ -21,51 +22,37 @@ interface Community {
 
 export default function CommunitiesPage() {
   const { user } = useAuth();
-  const [communities, setCommunities] = useState<Community[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
-  useEffect(() => {
-    const fetchCommunities = async () => {
-      if (!user) return;
+  const fetcher = async () => {
+    if (!user) return [];
 
-      try {
-        // Fetch communities where the user is a member
-        const { data, error } = await supabase
-          .from("communities")
-          .select(
-            `
-            *,
-            community_members!inner (
-              role,
-              user_id
-            )
-          `
-          )
-          .eq("community_members.user_id", user.id);
+    const { data, error } = await supabase
+      .from("communities")
+      .select(
+        `
+        *,
+        community_members!inner (
+          role,
+          user_id
+        )
+      `
+      )
+      .eq("community_members.user_id", user.id);
 
-        if (error) {
-          console.error("Error fetching communities:", error);
-          return;
-        }
+    if (error) throw error;
 
-        // Transform data to include role
-        const transformedCommunities = data.map((item: any) => ({
-          ...item,
-          user_role: item.community_members[0].role,
-          member_count: 1, // Placeholder, would need a separate count query or aggregation
-        }));
+    return data.map((item: any) => ({
+      ...item,
+      user_role: item.community_members[0].role,
+      member_count: 1, // Placeholder
+    }));
+  };
 
-        setCommunities(transformedCommunities);
-      } catch (error) {
-        console.error("Error:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchCommunities();
-  }, [user]);
+  const { data: communities = [], isLoading } = useSWR(
+    user ? ["communities", user.id] : null,
+    fetcher
+  );
 
   return (
     <div className="container mx-auto p-6 max-w-7xl space-y-8">
