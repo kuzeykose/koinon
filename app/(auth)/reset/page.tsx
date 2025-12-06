@@ -14,39 +14,38 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import FormError from "@/components/form-error";
 
-const STATUS = {
-  IDLE: 'idle',
-  LOADING: 'loading',
-  SENT: 'sent'
-} as const;
-
-type StatusType = (typeof STATUS)[keyof typeof STATUS];
 
 export default function ResetRequestPage() {
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<StatusType>(STATUS.IDLE);
-  
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const supabase = useMemo(() => createClient(), []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStatus(STATUS.LOADING);
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/reset/confirm`,
-    });
+    const formData = new FormData(e.target as HTMLFormElement);
+    const email = formData.get("email") as string;
+    
+    setIsLoading(true);
 
-    if (error) {
-      setStatus(STATUS.IDLE);
-      toast.error(error.message || "Unable to send reset link");
-    } else {
-      setStatus(STATUS.SENT);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset/confirm`,
+      });
+
+      if (error) {
+        setError(error.message);
+      }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  if (status === STATUS.SENT) {
+  if (isLoading === false && error === null) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-4 dark:bg-black">
         <Card className="w-full max-w-md">
@@ -74,21 +73,25 @@ export default function ResetRequestPage() {
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
+                name="email"
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 required
-                disabled={status === STATUS.LOADING}
+                disabled={isLoading}
               />
             </div>
           </CardContent>
+
+          {error && (
+            <FormError message={error} />
+          )}
+
           <CardFooter>
             <Button
               type="submit"
               className="w-full"
-              disabled={status === STATUS.LOADING}
+              disabled={isLoading}
             >
-              {status === STATUS.LOADING && (
+              {isLoading && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
               Send reset link

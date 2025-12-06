@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -15,74 +15,66 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import useSWR from "swr";
-
-const STATUS = {
-  CHECKING: "checking",
-  READY: "ready",
-  SUBMITTING: "submitting",
-  BLOCKED: "blocked",
-} as const;
-
-type StatusType = (typeof STATUS)[keyof typeof STATUS];
-
-const DISABLE_STATES = new Set<StatusType>([
-  STATUS.CHECKING,
-  STATUS.SUBMITTING,
-  STATUS.BLOCKED,
-]);
+import { useAuth } from "@/contexts/auth-context";
+import FormError from "@/components/form-error";
 
 export default function ResetConfirmPage() {
   const router = useRouter();
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [status, setStatus] = useState<StatusType>(STATUS.CHECKING);
+  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const supabase = useMemo(() => createClient(), []);
-
-  const fetcher = async () => {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) {
-      throw new Error("No active session");
-    }
-    return data.session;
-  };
-
-  const { data: session, error, isLoading } = useSWR("reset-session", fetcher);
-
-  useEffect(() => {
-    if (error || (!isLoading && !session && status !== STATUS.BLOCKED)) {
-      toast.error("Reset link is invalid or expired. Request a new one.");
-      setStatus(STATUS.BLOCKED);
-    } else if (session) {
-      setStatus(STATUS.READY);
-    }
-  }, [session, error, isLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const formData = new FormData(e.target as HTMLFormElement);
+    const password = formData.get("password") as string;
+    const confirm = formData.get("confirm") as string;
+
     if (password !== confirm) {
-      toast.error("Passwords do not match");
+      setError("Passwords do not match");
       return;
     }
 
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters");
-      return;
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+
+      if (error) {
+        setError(error.message);
+        return;
+      }
+
+      router.push("/login");
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
-
-    setStatus(STATUS.SUBMITTING);
-    const { error } = await supabase.auth.updateUser({ password });
-
-    if (error) {
-      toast.error(error.message || "Could not update password");
-      setStatus(STATUS.READY);
-      return;
-    }
-
-    router.push("/login");
   };
+
+  if (user === null) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-4 dark:bg-black">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Invalid Reset Link</CardTitle>
+            <CardDescription>
+              This password reset link is invalid or has expired.
+            </CardDescription>
+          </CardHeader>
+          <CardFooter>
+            <Button onClick={() => router.push("/reset")} className="w-full">
+              Request New Reset Link
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-4 dark:bg-black">
@@ -101,36 +93,33 @@ export default function ResetConfirmPage() {
               <Label htmlFor="password">New password</Label>
               <Input
                 id="password"
+                name="password"
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                placeholder="password"
                 required
                 minLength={6}
-                disabled={DISABLE_STATES.has(status)}
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirm">Confirm password</Label>
               <Input
                 id="confirm"
+                name="confirm"
                 type="password"
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
+                placeholder="Re-enter your password"
                 required
                 minLength={6}
-                disabled={DISABLE_STATES.has(status)}
+                disabled={isLoading}
               />
             </div>
+            {error && (
+              <FormError message={error} />
+            )}
           </CardContent>
           <CardFooter>
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={DISABLE_STATES.has(status)}
-            >
-              {status === STATUS.SUBMITTING && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Update password
             </Button>
           </CardFooter>
