@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -16,39 +16,48 @@ import {
 } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import useSWR from "swr";
 
-enum Status {
-  Checking = "checking",
-  Ready = "ready",
-  Submitting = "submitting",
-  Blocked = "blocked",
-}
+const STATUS = {
+  CHECKING: "checking",
+  READY: "ready",
+  SUBMITTING: "submitting",
+  BLOCKED: "blocked",
+} as const;
+
+type StatusType = (typeof STATUS)[keyof typeof STATUS];
+
+const DISABLE_STATES = new Set<StatusType>([
+  STATUS.CHECKING,
+  STATUS.SUBMITTING,
+  STATUS.BLOCKED,
+]);
 
 export default function ResetConfirmPage() {
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [status, setStatus] = useState<
-    | { state: Status.Checking }
-    | { state: Status.Ready }
-    | { state: Status.Submitting }
-    | { state: Status.Blocked }
-  >({ state: Status.Checking });
+  const [status, setStatus] = useState<StatusType>(STATUS.CHECKING);
+  const supabase = useMemo(() => createClient(), []);
+
+  const fetcher = async () => {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      throw new Error("No active session");
+    }
+    return data.session;
+  };
+
+  const { data: session, error, isLoading } = useSWR("reset-session", fetcher);
 
   useEffect(() => {
-    const checkSession = async () => {
-      const supabase = createClient();
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        toast.error("Reset link is invalid or expired. Request a new one.");
-        setStatus({ state: Status.Blocked });
-        return;
-      }
-      setStatus({ state: Status.Ready });
-    };
-
-    void checkSession();
-  }, []);
+    if (error || (!isLoading && !session && status !== STATUS.BLOCKED)) {
+      toast.error("Reset link is invalid or expired. Request a new one.");
+      setStatus(STATUS.BLOCKED);
+    } else if (session) {
+      setStatus(STATUS.READY);
+    }
+  }, [session, error, isLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,13 +72,12 @@ export default function ResetConfirmPage() {
       return;
     }
 
-    setStatus({ state: Status.Submitting });
-    const supabase = createClient();
+    setStatus(STATUS.SUBMITTING);
     const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
       toast.error(error.message || "Could not update password");
-      setStatus({ state: Status.Ready });
+      setStatus(STATUS.READY);
       return;
     }
 
@@ -80,7 +88,9 @@ export default function ResetConfirmPage() {
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-4 dark:bg-black">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Choose a new password</CardTitle>
+          <CardTitle className="text-2xl font-bold">
+            Choose a new password
+          </CardTitle>
           <CardDescription>
             After submitting you&apos;ll be redirected to sign in.
           </CardDescription>
@@ -96,11 +106,7 @@ export default function ResetConfirmPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                disabled={
-                  status.state === Status.Submitting ||
-                  status.state === Status.Checking ||
-                  status.state === Status.Blocked
-                }
+                disabled={DISABLE_STATES.has(status)}
               />
             </div>
             <div className="space-y-2">
@@ -112,11 +118,7 @@ export default function ResetConfirmPage() {
                 onChange={(e) => setConfirm(e.target.value)}
                 required
                 minLength={6}
-                disabled={
-                  status.state === Status.Submitting ||
-                  status.state === Status.Checking ||
-                  status.state === Status.Blocked
-                }
+                disabled={DISABLE_STATES.has(status)}
               />
             </div>
           </CardContent>
@@ -124,15 +126,11 @@ export default function ResetConfirmPage() {
             <Button
               type="submit"
               className="w-full"
-              disabled={
-                status.state === Status.Submitting ||
-                status.state === Status.Checking ||
-                status.state === Status.Blocked
-              }
+              disabled={DISABLE_STATES.has(status)}
             >
-              {status.state === Status.Submitting && (
+              {status === STATUS.SUBMITTING && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )} 
+              )}
               Update password
             </Button>
           </CardFooter>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,38 +16,37 @@ import {
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-enum Status {
-  Idle = "idle",
-  Loading = "loading",
-  Sent = "sent",
-}
+const STATUS = {
+  IDLE: 'idle',
+  LOADING: 'loading',
+  SENT: 'sent'
+} as const;
+
+type StatusType = (typeof STATUS)[keyof typeof STATUS];
 
 export default function ResetRequestPage() {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<
-    | { state: Status.Idle }
-    | { state: Status.Loading }
-    | { state: Status.Sent }
-  >({ state: Status.Idle });
+  const [status, setStatus] = useState<StatusType>(STATUS.IDLE);
+  
+  const supabase = useMemo(() => createClient(), []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStatus({ state: Status.Loading });
+    setStatus(STATUS.LOADING);
 
-    const supabase = createClient();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/reset/confirm`,
     });
 
     if (error) {
-      setStatus({ state: Status.Idle });
+      setStatus(STATUS.IDLE);
       toast.error(error.message || "Unable to send reset link");
     } else {
-      setStatus({ state: Status.Sent });
+      setStatus(STATUS.SENT);
     }
   };
 
-  if (status.state === Status.Sent) {
+  if (status === STATUS.SENT) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-4 dark:bg-black">
         <Card className="w-full max-w-md">
@@ -79,7 +78,7 @@ export default function ResetRequestPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                disabled={status.state === Status.Loading}
+                disabled={status === STATUS.LOADING}
               />
             </div>
           </CardContent>
@@ -87,9 +86,9 @@ export default function ResetRequestPage() {
             <Button
               type="submit"
               className="w-full"
-              disabled={status.state === Status.Loading}
+              disabled={status === STATUS.LOADING}
             >
-              {status.state === Status.Loading && (
+              {status === STATUS.LOADING && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
               Send reset link
