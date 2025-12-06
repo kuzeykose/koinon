@@ -84,6 +84,14 @@ export default function LoginPage() {
                 required
                 disabled={loading}
               />
+              <p className="text-right text-sm">
+                <Link
+                  href="/reset"
+                  className="text-zinc-900 hover:underline dark:text-zinc-100"
+                >
+                  Forgot password?
+                </Link>
+              </p>
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
