@@ -16,10 +16,10 @@ import {
 import { Loader2 } from "lucide-react";
 import FormError from "@/components/form-error";
 
-
 export default function ResetRequestPage() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const supabase = useMemo(() => createClient(), []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,8 +27,9 @@ export default function ResetRequestPage() {
 
     const formData = new FormData(e.target as HTMLFormElement);
     const email = formData.get("email") as string;
-    
+
     setIsLoading(true);
+    setError(null);
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -37,6 +38,8 @@ export default function ResetRequestPage() {
 
       if (error) {
         setError(error.message);
+      } else {
+        setIsSuccess(true);
       }
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");
@@ -45,13 +48,15 @@ export default function ResetRequestPage() {
     }
   };
 
-  if (isLoading === false && error === null) {
+  if (isSuccess) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-4 dark:bg-black">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Check your email</CardTitle>
-            <CardDescription>We&apos;ve sent a password reset link.</CardDescription>
+            <CardDescription>
+              We&apos;ve sent a password reset link.
+            </CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -81,19 +86,11 @@ export default function ResetRequestPage() {
             </div>
           </CardContent>
 
-          {error && (
-            <FormError message={error} />
-          )}
+          {error && <FormError message={error} />}
 
           <CardFooter>
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading}
-            >
-              {isLoading && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Send reset link
             </Button>
           </CardFooter>
