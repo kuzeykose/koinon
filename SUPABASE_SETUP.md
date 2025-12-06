@@ -54,6 +54,8 @@ Replace `your-project-url` and `your-anon-key` with the values from Step 2.
 3. Add **Redirect URLs**:
    - `http://localhost:3000/auth/callback` (development)
    - `https://your-domain.com/auth/callback` (production)
+   - `http://localhost:3000/auth/reset/confirm` (development, password reset)
+   - `https://your-domain.com/auth/reset/confirm` (production, password reset)
 
 ## Step 6: Run the Application
 
