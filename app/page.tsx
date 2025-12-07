@@ -30,7 +30,7 @@ export default function Home() {
           <div className="flex items-center space-x-2">
             <BookOpen className="h-8 w-8 text-zinc-900 dark:text-zinc-100" />
             <span className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-              Book Shelf
+              Koinon
             </span>
           </div>
           <div className="space-x-4">

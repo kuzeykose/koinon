@@ -1,6 +1,6 @@
 # Supabase Authentication Setup
 
-This guide will help you set up Supabase authentication for the Book Shelf application.
+This guide will help you set up Supabase authentication for the Koinon application.
 
 ## Prerequisites
 

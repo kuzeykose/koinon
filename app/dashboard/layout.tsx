@@ -32,7 +32,7 @@ export default function DashboardLayout({
           <div className="flex items-center space-x-2">
             <BookOpen className="h-6 w-6 text-zinc-900 dark:text-zinc-100" />
             <span className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
-              Book Shelf
+              Koinon
             </span>
           </div>
           <div className="flex items-center space-x-4">

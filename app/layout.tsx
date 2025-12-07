@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Book Shelf - Organize Your Reading Collection",
+  title: "Koinon - Organize Your Reading Collection",
   description: "A modern book management application",
 };
 

@@ -491,7 +491,7 @@ export default function SettingsPage() {
           <div className="flex items-center space-x-2">
             <BookOpen className="h-6 w-6 text-zinc-900 dark:text-zinc-100" />
             <span className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
-              Book Shelf
+              Koinon
             </span>
           </div>
           <div className="flex items-center space-x-4">
@@ -585,7 +585,7 @@ export default function SettingsPage() {
               <p>
                 <strong>Note:</strong> Syncing your data will fetch all your
                 reading states and progress from Literal.club and save them to
-                your Book Shelf account.
+                your Koinon account.
               </p>
             </div>
           </CardContent>
@@ -595,7 +595,7 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Account Information</CardTitle>
-            <CardDescription>Your Book Shelf account details</CardDescription>
+            <CardDescription>Your Koinon account details</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -681,7 +681,7 @@ export default function SettingsPage() {
             </DialogTitle>
             <DialogDescription>
               Please review the {pendingBooks.length} books that will be synced
-              to your Book Shelf account. Click &quot;Approve & Sync&quot; to
+              to your Koinon account. Click &quot;Approve & Sync&quot; to
               continue.
             </DialogDescription>
           </DialogHeader>
