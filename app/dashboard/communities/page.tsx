@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import useSWR from "swr";
 import { CreateCommunityDialog } from "@/components/community/create-community-dialog";
 import { CommunityCard } from "@/components/community/community-card";
@@ -22,7 +21,7 @@ interface Community {
 
 export default function CommunitiesPage() {
   const { user } = useAuth();
-  const supabase = useMemo(() => createClient(), []);
+  const supabase = createClient();
 
   const fetcher = async () => {
     if (!user) return [];
