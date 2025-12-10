@@ -11,6 +11,9 @@ export default function DashboardPage() {
         <Button>
           <Link href="/dashboard/communities">Communities</Link>
         </Button>
+        <Button>
+          <Link href="/dashboard/shelf">Shelf</Link>
+        </Button>
       </div>
     </div>
   );

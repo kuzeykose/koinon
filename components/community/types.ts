@@ -22,6 +22,10 @@ export interface ReadingActivity {
   id: string;
   user_id: string;
   status: string;
+  progress: number;
+  capacity: number | null;
+  unit: string | null;
+  completed: boolean;
   book: {
     title: string;
     cover: string | null;

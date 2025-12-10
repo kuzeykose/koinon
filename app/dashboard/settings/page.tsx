@@ -91,8 +91,7 @@ export default function SettingsPage() {
   const [isApproving, setIsApproving] = useState(false);
   const [pendingBooks, setPendingBooks] = useState<BookPreview[]>([]);
   const [syncStatus, setSyncStatus] = useState<{
-    states: number;
-    progresses: number;
+    books: number;
   } | null>(null);
 
   const fetchReadingProgresses = async (token: string, bookIds: string[]) => {
@@ -180,61 +179,31 @@ export default function SettingsPage() {
         return false;
       }
 
-      // Extract reading states and progresses
-      const readingStates = booksData.map((book) => book.readingState);
-      const readingProgresses = booksData
-        .filter((book) => book.readingProgress !== null)
-        .map((book) => book.readingProgress!);
-
-      // Save reading states
-      const statesData = readingStates.map((state) => ({
-        id: state.id,
+      // Save to the merged user_books table
+      const userBooksData = booksData.map((item) => ({
+        id: item.readingState.id,
         user_id: user.id,
-        book_id: state.bookId,
-        status: state.status,
-        profile_id: state.profileId,
-        created_at: state.createdAt,
+        book_id: item.readingState.bookId,
+        profile_id: item.readingState.profileId,
+        status: item.readingState.status,
+        progress: item.readingProgress?.progress || 0,
+        capacity: item.readingProgress?.capacity || null,
+        unit: item.readingProgress?.unit || "pages",
+        completed: item.readingProgress?.completed || false,
+        created_at: item.readingState.createdAt,
         synced_at: new Date().toISOString(),
       }));
 
-      const { error: statesError } = await supabase
-        .from("reading_states")
-        .upsert(statesData, {
+      const { error: userBooksError } = await supabase
+        .from("user_books")
+        .upsert(userBooksData, {
           onConflict: "user_id,book_id",
         });
 
-      if (statesError) {
-        console.error("Error saving reading states:", statesError);
-        toast.error("Failed to save reading states to database");
+      if (userBooksError) {
+        console.error("Error saving user_books:", userBooksError);
+        toast.error("Failed to save reading data to database");
         return false;
-      }
-
-      // Save reading progresses
-      if (readingProgresses.length > 0) {
-        const progressesData = readingProgresses.map((progress) => ({
-          id: progress.id,
-          user_id: user.id,
-          book_id: progress.bookId,
-          profile_id: progress.profileId,
-          capacity: progress.capacity,
-          progress: progress.progress,
-          unit: progress.unit,
-          completed: progress.completed,
-          created_at: progress.createdAt,
-          synced_at: new Date().toISOString(),
-        }));
-
-        const { error: progressesError } = await supabase
-          .from("reading_progresses")
-          .upsert(progressesData, {
-            onConflict: "user_id,book_id",
-          });
-
-        if (progressesError) {
-          console.error("Error saving reading progresses:", progressesError);
-          toast.error("Failed to save reading progresses to database");
-          return false;
-        }
       }
 
       // Save/Update profile
@@ -261,8 +230,7 @@ export default function SettingsPage() {
       }
 
       setSyncStatus({
-        states: readingStates.length,
-        progresses: readingProgresses.length,
+        books: booksData.length,
       });
 
       toast.success("Successfully saved all data to database!");
@@ -533,8 +501,8 @@ export default function SettingsPage() {
                       Last sync completed successfully
                     </p>
                     <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-                      Synced {syncStatus.states} reading states and{" "}
-                      {syncStatus.progresses} reading progresses
+                      Synced {syncStatus.books} books with reading status and
+                      progress
                     </p>
                   </div>
                 </div>

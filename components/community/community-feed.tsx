@@ -9,6 +9,13 @@ interface CommunityFeedProps {
   communityId: string;
 }
 
+const readingStatuses: Record<string, string> = {
+  IS_READING: "Reading",
+  COMPLETED: "Completed",
+  PAUSED: "Paused",
+  ABANDONED: "Abandoned",
+};
+
 export async function CommunityFeed({ communityId }: CommunityFeedProps) {
   const supabase = await createClient();
 
@@ -41,14 +48,17 @@ export async function CommunityFeed({ communityId }: CommunityFeedProps) {
     .select("id, full_name, avatar_url")
     .in("id", memberIds);
 
-  // 3. Fetch Reading Activities
+  // 3. Fetch Reading Activities from user_books (merged table)
   const { data: readingData } = await supabase
-    .from("reading_states")
+    .from("user_books")
     .select(
       `
         id,
         user_id,
         status,
+        progress,
+        capacity,
+        unit,
         synced_at,
         book:books (
           title,
@@ -84,7 +94,9 @@ export async function CommunityFeed({ communityId }: CommunityFeedProps) {
                 <span className="font-semibold text-sm">
                   {activity.profile?.full_name || "Unknown Member"}
                 </span>
-                <span className="text-xs text-zinc-500">is reading</span>
+                <span className="text-xs text-zinc-500">
+                  {readingStatuses[activity.status] || activity.status}
+                </span>
               </div>
             </CardHeader>
             <CardContent className="pb-4">
@@ -115,9 +127,17 @@ export async function CommunityFeed({ communityId }: CommunityFeedProps) {
                         : "Unknown Author"}
                     </p>
                   )}
-                  <Badge variant="secondary" className="mt-2 text-xs">
-                    Reading
-                  </Badge>
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    <Badge variant="secondary" className="text-xs">
+                      {readingStatuses[activity.status] || activity.status}
+                    </Badge>
+                    {activity.capacity && (
+                      <Badge variant="outline" className="text-xs">
+                        {activity.progress}/{activity.capacity}{" "}
+                        {activity.unit || "pages"}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </div>
             </CardContent>
