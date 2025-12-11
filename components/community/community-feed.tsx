@@ -1,23 +1,37 @@
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
 import { BookOpen } from "lucide-react";
 import { Profile, ReadingActivity } from "./types";
+import { UserBooksCard } from "./user-books-card";
+
+const USERS_PER_PAGE = 6;
 
 interface CommunityFeedProps {
   communityId: string;
+  page?: number;
 }
 
-const readingStatuses: Record<string, string> = {
-  IS_READING: "Reading",
-  COMPLETED: "Completed",
-  PAUSED: "Paused",
-  ABANDONED: "Abandoned",
-};
+interface UserWithBooks {
+  user_id: string;
+  profile: Profile | undefined;
+  books: ReadingActivity[];
+  totalBooks: number;
+}
 
-export async function CommunityFeed({ communityId }: CommunityFeedProps) {
+export async function CommunityFeed({
+  communityId,
+  page = 1,
+}: CommunityFeedProps) {
   const supabase = await createClient();
+  const currentPage = Math.max(1, page);
 
   // 1. Fetch Members to get IDs
   const { data: membersRaw } = await supabase
@@ -48,7 +62,7 @@ export async function CommunityFeed({ communityId }: CommunityFeedProps) {
     .select("id, full_name, avatar_url")
     .in("id", memberIds);
 
-  // 3. Fetch Reading Activities from user_books (merged table)
+  // 3. Fetch ALL Reading Activities from user_books (to group by user)
   const { data: readingData } = await supabase
     .from("user_books")
     .select(
@@ -67,92 +81,135 @@ export async function CommunityFeed({ communityId }: CommunityFeedProps) {
         )
       `
     )
+    .eq("status", "IS_READING")
     .in("user_id", memberIds)
     .order("synced_at", { ascending: false });
 
   const profilesMap = new Map(profiles?.map((p) => [p.id, p]) || []);
 
-  const activities = (readingData?.map((item: any) => ({
-    ...item,
-    profile: profilesMap.get(item.user_id),
-    updated_at: item.synced_at,
-  })) || []) as ReadingActivity[];
+  // Group activities by user
+  const userBooksMap = new Map<string, ReadingActivity[]>();
+  readingData?.forEach((item: any) => {
+    const activity: ReadingActivity = {
+      ...item,
+      profile: profilesMap.get(item.user_id),
+      updated_at: item.synced_at,
+    };
+    const existing = userBooksMap.get(item.user_id) || [];
+    existing.push(activity);
+    userBooksMap.set(item.user_id, existing);
+  });
+
+  // Build user list with their books (pass ALL books for client-side expand)
+  const usersWithBooks: UserWithBooks[] = Array.from(userBooksMap.entries())
+    .map(([user_id, books]) => ({
+      user_id,
+      profile: profilesMap.get(user_id),
+      books, // Pass all books - client component will handle showing more
+      totalBooks: books.length,
+    }))
+    .sort((a, b) => b.totalBooks - a.totalBooks); // Sort by activity
+
+  // Paginate users
+  const totalPages = Math.ceil(usersWithBooks.length / USERS_PER_PAGE);
+  const from = (currentPage - 1) * USERS_PER_PAGE;
+  const to = from + USERS_PER_PAGE;
+  const paginatedUsers = usersWithBooks.slice(from, to);
+
+  // Generate pagination page numbers
+  const getPageNumbers = () => {
+    const pages: (number | "ellipsis")[] = [];
+    const maxVisible = 5;
+
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push("ellipsis");
+
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = start; i <= end; i++) pages.push(i);
+
+      if (currentPage < totalPages - 2) pages.push("ellipsis");
+      pages.push(totalPages);
+    }
+
+    return pages;
+  };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {activities.length > 0 ? (
-        activities.map((activity) => (
-          <Card key={activity.id} className="overflow-hidden">
-            <CardHeader className="flex flex-row items-center gap-4 pb-4">
-              <Avatar>
-                <AvatarImage src={activity.profile?.avatar_url || ""} />
-                <AvatarFallback>
-                  {activity.profile?.full_name?.[0] || "U"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col">
-                <span className="font-semibold text-sm">
-                  {activity.profile?.full_name || "Unknown Member"}
-                </span>
-                <span className="text-xs text-zinc-500">
-                  {readingStatuses[activity.status] || activity.status}
-                </span>
-              </div>
-            </CardHeader>
-            <CardContent className="pb-4">
-              <div className="flex gap-4">
-                <div className="flex-shrink-0 w-16 h-24 bg-zinc-100 rounded overflow-hidden">
-                  {activity.book.cover ? (
-                    <img
-                      src={activity.book.cover}
-                      alt={activity.book.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <BookOpen className="h-6 w-6 text-zinc-300" />
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-sm line-clamp-2 mb-1">
-                    {activity.book.title}
-                  </h4>
-                  {activity.book.authors && (
-                    <p className="text-xs text-zinc-500 truncate">
-                      {Array.isArray(activity.book.authors)
-                        ? activity.book.authors
-                            .map((a: any) => a.name)
-                            .join(", ")
-                        : "Unknown Author"}
-                    </p>
-                  )}
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    <Badge variant="secondary" className="text-xs">
-                      {readingStatuses[activity.status] || activity.status}
-                    </Badge>
-                    {activity.capacity && (
-                      <Badge variant="outline" className="text-xs">
-                        {activity.progress}/{activity.capacity}{" "}
-                        {activity.unit || "pages"}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))
-      ) : (
-        <div className="col-span-full text-center py-12 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-dashed">
-          <BookOpen className="h-10 w-10 text-zinc-300 mx-auto mb-3" />
-          <h3 className="font-medium text-zinc-900 dark:text-zinc-100">
-            No activity yet
-          </h3>
-          <p className="text-zinc-500 text-sm">
-            When members start reading books, they'll appear here.
-          </p>
-        </div>
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {paginatedUsers.length > 0 ? (
+          paginatedUsers.map((user) => (
+            <UserBooksCard
+              key={user.user_id}
+              user_id={user.user_id}
+              profile={user.profile}
+              books={user.books}
+              totalBooks={user.totalBooks}
+            />
+          ))
+        ) : (
+          <div className="col-span-full text-center py-12 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-dashed">
+            <BookOpen className="h-10 w-10 text-zinc-300 mx-auto mb-3" />
+            <h3 className="font-medium text-zinc-900 dark:text-zinc-100">
+              No activity yet
+            </h3>
+            <p className="text-zinc-500 text-sm">
+              When members start reading books, they'll appear here.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href={currentPage > 1 ? `?page=${currentPage - 1}` : "#"}
+                aria-disabled={currentPage <= 1}
+                className={
+                  currentPage <= 1 ? "pointer-events-none opacity-50" : ""
+                }
+              />
+            </PaginationItem>
+
+            {getPageNumbers().map((pageNum, idx) =>
+              pageNum === "ellipsis" ? (
+                <PaginationItem key={`ellipsis-${idx}`}>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              ) : (
+                <PaginationItem key={pageNum}>
+                  <PaginationLink
+                    href={`?page=${pageNum}`}
+                    isActive={pageNum === currentPage}
+                  >
+                    {pageNum}
+                  </PaginationLink>
+                </PaginationItem>
+              )
+            )}
+
+            <PaginationItem>
+              <PaginationNext
+                href={
+                  currentPage < totalPages ? `?page=${currentPage + 1}` : "#"
+                }
+                aria-disabled={currentPage >= totalPages}
+                className={
+                  currentPage >= totalPages
+                    ? "pointer-events-none opacity-50"
+                    : ""
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       )}
     </div>
   );
