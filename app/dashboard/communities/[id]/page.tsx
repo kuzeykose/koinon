@@ -10,10 +10,14 @@ import { Community } from "@/components/community/types";
 
 export default async function CommunityPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ page?: string }>;
 }) {
   const { id } = await params;
+  const { page } = await searchParams;
+  const currentPage = page ? parseInt(page, 10) : 1;
   const supabase = await createClient();
 
   // 1. Fetch Community Details
@@ -76,7 +80,7 @@ export default async function CommunityPage({
         </TabsList>
 
         <TabsContent value="feed" className="mt-6">
-          <CommunityFeed communityId={id} />
+          <CommunityFeed communityId={id} page={currentPage} />
         </TabsContent>
 
         <TabsContent value="members" className="mt-6">
