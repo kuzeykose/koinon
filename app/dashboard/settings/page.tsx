@@ -443,7 +443,7 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black">
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
+      <main className="container max-w-4xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">
             Settings

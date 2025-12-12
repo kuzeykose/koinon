@@ -41,7 +41,7 @@ export default async function CommunityPage({
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl space-y-8">
+    <div className="container max-w-6xl space-y-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
