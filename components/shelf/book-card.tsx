@@ -4,14 +4,14 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import {
   Select,
   SelectContent,
@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { BookOpen, Pencil } from "lucide-react";
+import { BookOpen, MoreVertical } from "lucide-react";
 import { updateUserBook, ReadingStatus } from "@/lib/actions/book-actions";
 
 const readingStatuses = {
@@ -102,7 +102,7 @@ export function BookCard({ book, userBook }: BookCardProps) {
     : 0;
 
   return (
-    <div className="flex gap-4 group items-center">
+    <div className="flex gap-4 items-center">
       <div className="flex-shrink-0 w-12 h-16 bg-zinc-100 rounded overflow-hidden">
         {book.cover ? (
           <img
@@ -119,14 +119,40 @@ export function BookCard({ book, userBook }: BookCardProps) {
 
       <div className="flex-1 min-w-0 flex items-center gap-4">
         <div className="flex-1 min-w-0">
-          <h4 className="font-medium text-sm truncate">{book.title}</h4>
+          <div className="flex items-center gap-2">
+            <h4 className="font-medium text-sm truncate">{book.title}</h4>
+            {/* Status badge for mobile - next to title */}
+            {displayStatus !== "Unknown" && (
+              <Badge
+                variant="secondary"
+                className="text-xs whitespace-nowrap md:hidden flex-shrink-0"
+              >
+                {displayStatus}
+              </Badge>
+            )}
+          </div>
           {authors && (
             <p className="text-xs text-zinc-500 truncate">{authors}</p>
           )}
+          {/* Progress bar for mobile - under author */}
+          {progressPercent > 0 && (
+            <div className="flex md:hidden items-center gap-2 mt-1">
+              <div className="flex-1 bg-zinc-100 rounded-full h-2">
+                <div
+                  className="bg-emerald-500 h-2 rounded-full transition-all"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+              <span className="text-xs text-zinc-500 text-right whitespace-nowrap">
+                {displayProgress || `${Math.round(progressPercent)}%`}
+              </span>
+            </div>
+          )}
         </div>
 
+        {/* Progress bar for desktop - on the right */}
         {progressPercent > 0 && (
-          <div className="hidden sm:flex items-center gap-2 w-32">
+          <div className="hidden md:flex items-center gap-2 w-32">
             <div className="flex-1 bg-zinc-100 rounded-full h-2">
               <div
                 className="bg-emerald-500 h-2 rounded-full transition-all"
@@ -139,43 +165,37 @@ export function BookCard({ book, userBook }: BookCardProps) {
           </div>
         )}
 
-        <div className="flex items-center gap-2">
+        {/* Badges for desktop */}
+        <div className="hidden md:flex items-center gap-2">
           {displayStatus !== "Unknown" && (
             <Badge variant="secondary" className="text-xs whitespace-nowrap">
               {displayStatus}
             </Badge>
           )}
           {displayProgress && (
-            <Badge
-              variant="outline"
-              className="text-xs whitespace-nowrap hidden md:inline-flex"
-            >
+            <Badge variant="outline" className="text-xs whitespace-nowrap">
               {displayProgress}
             </Badge>
           )}
         </div>
       </div>
 
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8"
-          >
-            <Pencil className="h-4 w-4" />
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="icon" className="flex-shrink-0 h-8 w-8">
+            <MoreVertical className="h-4 w-4" />
           </Button>
-        </DialogTrigger>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Update Reading Progress</DialogTitle>
-            <DialogDescription>
+        </SheetTrigger>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Update Reading Progress</SheetTitle>
+            <SheetDescription>
               Update your reading status and progress for &quot;{book.title}
               &quot;
-            </DialogDescription>
-          </DialogHeader>
+            </SheetDescription>
+          </SheetHeader>
 
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 px-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Status</label>
               <Select
@@ -196,7 +216,7 @@ export function BookCard({ book, userBook }: BookCardProps) {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Progress</label>
-              <div className="flex gap-2 items-center">
+              <div className="flex flex-wrap gap-2 items-center">
                 <Input
                   type="number"
                   value={progress}
@@ -244,16 +264,16 @@ export function BookCard({ book, userBook }: BookCardProps) {
             )}
           </div>
 
-          <DialogFooter>
+          <SheetFooter>
             <Button variant="outline" onClick={() => setIsOpen(false)}>
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={isLoading}>
               {isLoading ? "Saving..." : "Save Changes"}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
