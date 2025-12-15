@@ -30,13 +30,13 @@ export async function CommunityInfo({ communityId }: CommunityInfoProps) {
         <CardContent className="space-y-4">
           <div>
             <h4 className="text-sm font-medium mb-1">Description</h4>
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-muted-foreground">
               {community.description || "No description provided."}
             </p>
           </div>
 
-          <div className="flex flex-col gap-2 pt-4 border-t">
-            <div className="flex items-center text-sm text-zinc-500">
+          <div className="flex flex-col gap-2 pt-4 border-t border-border">
+            <div className="flex items-center text-sm text-muted-foreground">
               <Calendar className="mr-2 h-4 w-4" />
               <span>
                 Created {formatDistanceToNow(new Date(community.created_at))}{" "}

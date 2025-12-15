@@ -51,7 +51,7 @@ export default async function CommunityPage({
           <p className="text-muted-foreground mt-2 max-w-2xl">
             {community.description || "No description provided."}
           </p>
-          <div className="flex items-center gap-4 mt-4 text-sm text-zinc-500">
+          <div className="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
             <div className="flex items-center">
               <Users className="mr-1 h-4 w-4" />
               <span>{memberCount || 0} members</span>

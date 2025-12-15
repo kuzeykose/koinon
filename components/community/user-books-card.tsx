@@ -46,7 +46,7 @@ export function UserBooksCard({
           <span className="font-semibold text-sm">
             {profile?.full_name || "Unknown Member"}
           </span>
-          <span className="text-xs text-zinc-500">
+          <span className="text-xs text-muted-foreground">
             {totalBooks} {totalBooks === 1 ? "book" : "books"}
           </span>
         </div>
@@ -57,10 +57,10 @@ export function UserBooksCard({
         {visibleBooks.map((activity) => (
           <div
             key={activity.id}
-            className="flex items-center gap-3 p-3 rounded-lg bg-zinc-50 dark:bg-zinc-900/50"
+            className="flex items-center gap-3 p-3 rounded-lg bg-muted/50"
           >
             {/* Book Cover */}
-            <div className="flex-shrink-0 w-10 h-14 bg-zinc-200 dark:bg-zinc-800 rounded overflow-hidden">
+            <div className="flex-shrink-0 w-10 h-14 bg-muted rounded overflow-hidden">
               {activity.book.cover ? (
                 <img
                   src={activity.book.cover}
@@ -69,7 +69,7 @@ export function UserBooksCard({
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <BookOpen className="h-4 w-4 text-zinc-400" />
+                  <BookOpen className="h-4 w-4 text-muted-foreground" />
                 </div>
               )}
             </div>
@@ -80,7 +80,7 @@ export function UserBooksCard({
                 {activity.book.title}
               </h4>
               {activity.book.authors && (
-                <p className="text-xs text-zinc-500 truncate">
+                <p className="text-xs text-muted-foreground truncate">
                   {JSON.parse(activity.book.authors)
                     .map((a: any) => a.name)
                     .join(", ")}
@@ -90,7 +90,7 @@ export function UserBooksCard({
               {/* Progress Bar - only show when capacity exists and is > 0 */}
               {activity.capacity != null && activity.capacity > 0 && (
                 <div className="mt-2 flex items-center gap-2">
-                  <div className="flex-1 h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+                  <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                     <div
                       className="h-full bg-emerald-500 rounded-full transition-all"
                       style={{
@@ -101,7 +101,7 @@ export function UserBooksCard({
                       }}
                     />
                   </div>
-                  <span className="text-xs text-zinc-500 flex-shrink-0">
+                  <span className="text-xs text-muted-foreground flex-shrink-0">
                     {activity.progress || 0}/{activity.capacity}
                   </span>
                 </div>
@@ -121,7 +121,7 @@ export function UserBooksCard({
             onClick={() => setIsExpanded(!isExpanded)}
             className="w-full flex justify-center pt-2 cursor-pointer hover:opacity-70 transition-opacity"
           >
-            <div className="flex flex-col items-center text-zinc-400">
+            <div className="flex flex-col items-center text-muted-foreground">
               {isExpanded ? (
                 <>
                   <ChevronUp className="h-5 w-5" />

@@ -47,7 +47,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-4 dark:bg-black">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
@@ -85,10 +85,7 @@ export default function LoginPage() {
                 disabled={loading}
               />
               <p className="text-right text-sm">
-                <Link
-                  href="/reset"
-                  className="text-zinc-900 hover:underline dark:text-zinc-100"
-                >
+                <Link href="/reset" className="text-foreground hover:underline">
                   Forgot password?
                 </Link>
               </p>
@@ -99,11 +96,11 @@ export default function LoginPage() {
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign In
             </Button>
-            <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="text-center text-sm text-muted-foreground">
               Don&apos;t have an account?{" "}
               <Link
                 href="/signup"
-                className="font-medium text-zinc-900 hover:underline dark:text-zinc-100"
+                className="font-medium text-foreground hover:underline"
               >
                 Sign up
               </Link>

@@ -58,7 +58,7 @@ export default function ResetConfirmPage() {
 
   if (user === null) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-4 dark:bg-black">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Invalid Reset Link</CardTitle>
@@ -77,7 +77,7 @@ export default function ResetConfirmPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-4 dark:bg-black">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">
@@ -113,9 +113,7 @@ export default function ResetConfirmPage() {
                 disabled={isLoading}
               />
             </div>
-            {error && (
-              <FormError message={error} />
-            )}
+            {error && <FormError message={error} />}
           </CardContent>
           <CardFooter>
             <Button type="submit" className="w-full" disabled={isLoading}>

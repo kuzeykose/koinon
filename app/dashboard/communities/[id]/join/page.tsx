@@ -120,7 +120,7 @@ export default function JoinCommunityPage({
   if (error || !community) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-        <p className="text-red-500">{error || "Community not found"}</p>
+        <p className="text-destructive">{error || "Community not found"}</p>
         <Button
           variant="outline"
           onClick={() => router.push("/dashboard/communities")}
@@ -140,8 +140,8 @@ export default function JoinCommunityPage({
           <CardDescription>{community.description}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-4">
-          <div className="h-16 w-16 bg-zinc-100 dark:bg-zinc-800 rounded-full flex items-center justify-center">
-            <Users className="h-8 w-8 text-zinc-500" />
+          <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center">
+            <Users className="h-8 w-8 text-muted-foreground" />
           </div>
           <p className="text-center text-muted-foreground">
             You've been invited to join this community.

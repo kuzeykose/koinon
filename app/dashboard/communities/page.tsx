@@ -65,9 +65,9 @@ export default async function CommunitiesPage() {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-20 text-center bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800">
-          <div className="bg-zinc-100 dark:bg-zinc-800 p-4 rounded-full mb-4">
-            <Users className="h-8 w-8 text-zinc-400" />
+        <div className="flex flex-col items-center justify-center py-20 text-center bg-muted/50 rounded-xl border border-dashed border-border">
+          <div className="bg-muted p-4 rounded-full mb-4">
+            <Users className="h-8 w-8 text-muted-foreground" />
           </div>
           <h3 className="text-lg font-semibold mb-2">No communities yet</h3>
           <p className="text-muted-foreground max-w-sm mb-6">

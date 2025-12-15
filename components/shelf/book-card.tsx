@@ -103,7 +103,7 @@ export function BookCard({ book, userBook }: BookCardProps) {
 
   return (
     <div className="flex gap-4 items-center">
-      <div className="flex-shrink-0 w-12 h-16 bg-zinc-100 rounded overflow-hidden">
+      <div className="flex-shrink-0 w-12 h-16 bg-muted rounded overflow-hidden">
         {book.cover ? (
           <img
             src={book.cover}
@@ -112,7 +112,7 @@ export function BookCard({ book, userBook }: BookCardProps) {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <BookOpen className="h-5 w-5 text-zinc-300" />
+            <BookOpen className="h-5 w-5 text-muted-foreground" />
           </div>
         )}
       </div>
@@ -132,18 +132,18 @@ export function BookCard({ book, userBook }: BookCardProps) {
             )}
           </div>
           {authors && (
-            <p className="text-xs text-zinc-500 truncate">{authors}</p>
+            <p className="text-xs text-muted-foreground truncate">{authors}</p>
           )}
           {/* Progress bar for mobile - under author */}
           {progressPercent > 0 && (
             <div className="flex md:hidden items-center gap-2 mt-1">
-              <div className="flex-1 bg-zinc-100 rounded-full h-2">
+              <div className="flex-1 bg-muted rounded-full h-2">
                 <div
                   className="bg-emerald-500 h-2 rounded-full transition-all"
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
-              <span className="text-xs text-zinc-500 text-right whitespace-nowrap">
+              <span className="text-xs text-muted-foreground text-right whitespace-nowrap">
                 {displayProgress || `${Math.round(progressPercent)}%`}
               </span>
             </div>
@@ -153,13 +153,13 @@ export function BookCard({ book, userBook }: BookCardProps) {
         {/* Progress bar for desktop - on the right */}
         {progressPercent > 0 && (
           <div className="hidden md:flex items-center gap-2 w-32">
-            <div className="flex-1 bg-zinc-100 rounded-full h-2">
+            <div className="flex-1 bg-muted rounded-full h-2">
               <div
                 className="bg-emerald-500 h-2 rounded-full transition-all"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
-            <span className="text-xs text-zinc-500 w-10 text-right">
+            <span className="text-xs text-muted-foreground w-10 text-right">
               {Math.round(progressPercent)}%
             </span>
           </div>
@@ -225,7 +225,7 @@ export function BookCard({ book, userBook }: BookCardProps) {
                   max={capacity || undefined}
                   className="w-24"
                 />
-                <span className="text-zinc-500">/</span>
+                <span className="text-muted-foreground">/</span>
                 <Input
                   type="number"
                   value={capacity}
@@ -249,10 +249,10 @@ export function BookCard({ book, userBook }: BookCardProps) {
 
             {capacity > 0 && (
               <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-500">
+                <label className="text-sm font-medium text-muted-foreground">
                   Progress: {Math.round((progress / capacity) * 100)}%
                 </label>
-                <div className="w-full bg-zinc-100 rounded-full h-2">
+                <div className="w-full bg-muted rounded-full h-2">
                   <div
                     className="bg-emerald-500 h-2 rounded-full transition-all"
                     style={{

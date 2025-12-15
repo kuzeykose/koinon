@@ -44,12 +44,10 @@ export async function CommunityFeed({
 
   if (memberIds.length === 0) {
     return (
-      <div className="text-center py-12 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-dashed">
-        <BookOpen className="h-10 w-10 text-zinc-300 mx-auto mb-3" />
-        <h3 className="font-medium text-zinc-900 dark:text-zinc-100">
-          No activity yet
-        </h3>
-        <p className="text-zinc-500 text-sm">
+      <div className="text-center py-12 bg-muted/50 rounded-xl border border-dashed border-border">
+        <BookOpen className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+        <h3 className="font-medium text-foreground">No activity yet</h3>
+        <p className="text-muted-foreground text-sm">
           When members start reading books, they'll appear here.
         </p>
       </div>
@@ -152,12 +150,10 @@ export async function CommunityFeed({
             />
           ))
         ) : (
-          <div className="col-span-full text-center py-12 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-dashed">
-            <BookOpen className="h-10 w-10 text-zinc-300 mx-auto mb-3" />
-            <h3 className="font-medium text-zinc-900 dark:text-zinc-100">
-              No activity yet
-            </h3>
-            <p className="text-zinc-500 text-sm">
+          <div className="col-span-full text-center py-12 bg-muted/50 rounded-xl border border-dashed border-border">
+            <BookOpen className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+            <h3 className="font-medium text-foreground">No activity yet</h3>
+            <p className="text-muted-foreground text-sm">
               When members start reading books, they'll appear here.
             </p>
           </div>

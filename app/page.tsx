@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { BookOpen, Library, Users, TrendingUp } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -15,17 +16,16 @@ export default async function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 font-sans dark:bg-black">
+    <div className="min-h-screen bg-background font-sans">
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-16">
         <nav className="flex items-center justify-between pb-16">
           <div className="flex items-center space-x-2">
-            <BookOpen className="h-8 w-8 text-zinc-900 dark:text-zinc-100" />
-            <span className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-              Koinon
-            </span>
+            <BookOpen className="h-8 w-8 text-foreground" />
+            <span className="text-2xl font-bold text-foreground">Koinon</span>
           </div>
-          <div className="space-x-4">
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
             <Button variant="outline" asChild>
               <Link href="/login">Sign In</Link>
             </Button>
@@ -36,10 +36,10 @@ export default async function Home() {
         </nav>
 
         <div className="mx-auto max-w-4xl text-center">
-          <h1 className="mb-6 text-5xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 md:text-6xl">
+          <h1 className="mb-6 text-5xl font-bold tracking-tight text-foreground md:text-6xl">
             Organize Your Reading Collection
           </h1>
-          <p className="mb-8 text-xl text-zinc-600 dark:text-zinc-400">
+          <p className="mb-8 text-xl text-muted-foreground">
             Track your books, manage your reading list, and discover new titles
             all in one place.
           </p>
@@ -55,39 +55,39 @@ export default async function Home() {
 
         {/* Features Section */}
         <div className="mx-auto mt-24 grid max-w-6xl gap-8 md:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-            <Library className="mb-4 h-12 w-12 text-zinc-900 dark:text-zinc-100" />
-            <h3 className="mb-2 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+          <div className="rounded-lg border border-border bg-card p-6">
+            <Library className="mb-4 h-12 w-12 text-foreground" />
+            <h3 className="mb-2 text-lg font-semibold text-foreground">
               Organize Collection
             </h3>
-            <p className="text-zinc-600 dark:text-zinc-400">
+            <p className="text-muted-foreground">
               Keep track of all your books in one organized digital library.
             </p>
           </div>
-          <div className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-            <BookOpen className="mb-4 h-12 w-12 text-zinc-900 dark:text-zinc-100" />
-            <h3 className="mb-2 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+          <div className="rounded-lg border border-border bg-card p-6">
+            <BookOpen className="mb-4 h-12 w-12 text-foreground" />
+            <h3 className="mb-2 text-lg font-semibold text-foreground">
               Track Progress
             </h3>
-            <p className="text-zinc-600 dark:text-zinc-400">
+            <p className="text-muted-foreground">
               Monitor your reading progress and set personal reading goals.
             </p>
           </div>
-          <div className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-            <Users className="mb-4 h-12 w-12 text-zinc-900 dark:text-zinc-100" />
-            <h3 className="mb-2 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+          <div className="rounded-lg border border-border bg-card p-6">
+            <Users className="mb-4 h-12 w-12 text-foreground" />
+            <h3 className="mb-2 text-lg font-semibold text-foreground">
               Share Reviews
             </h3>
-            <p className="text-zinc-600 dark:text-zinc-400">
+            <p className="text-muted-foreground">
               Write reviews and share your thoughts with fellow readers.
             </p>
           </div>
-          <div className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-            <TrendingUp className="mb-4 h-12 w-12 text-zinc-900 dark:text-zinc-100" />
-            <h3 className="mb-2 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+          <div className="rounded-lg border border-border bg-card p-6">
+            <TrendingUp className="mb-4 h-12 w-12 text-foreground" />
+            <h3 className="mb-2 text-lg font-semibold text-foreground">
               Discover Books
             </h3>
-            <p className="text-zinc-600 dark:text-zinc-400">
+            <p className="text-muted-foreground">
               Find new books based on your reading preferences and history.
             </p>
           </div>

@@ -37,7 +37,7 @@ export default async function ShelfPage() {
 
   return (
     <div>
-      <div className="flex flex-col divide-y divide-zinc-200">
+      <div className="flex flex-col divide-y divide-border">
         {sortedBooks &&
           sortedBooks.length > 0 &&
           sortedBooks.map((book) => (
@@ -47,7 +47,7 @@ export default async function ShelfPage() {
           ))}
       </div>
       {(!books || books.length === 0) && (
-        <div className="text-center py-12 text-zinc-500">
+        <div className="text-center py-12 text-muted-foreground">
           <p>No books in your shelf yet.</p>
         </div>
       )}

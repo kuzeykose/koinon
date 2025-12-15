@@ -27,7 +27,7 @@ interface CommunityCardProps {
 export function CommunityCard({ community }: CommunityCardProps) {
   return (
     <Link href={`/dashboard/communities/${community.id}`}>
-      <Card className="h-full hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors cursor-pointer border-zinc-200 dark:border-zinc-800">
+      <Card className="h-full hover:bg-muted/50 transition-colors cursor-pointer border-border">
         <CardHeader>
           <div className="flex justify-between items-start">
             <CardTitle className="text-xl truncate">{community.name}</CardTitle>
@@ -42,7 +42,7 @@ export function CommunityCard({ community }: CommunityCardProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center text-sm text-zinc-500 dark:text-zinc-400 gap-4">
+          <div className="flex items-center text-sm text-muted-foreground gap-4">
             <div className="flex items-center">
               <Users className="mr-1 h-4 w-4" />
               <span>
@@ -54,7 +54,7 @@ export function CommunityCard({ community }: CommunityCardProps) {
             </div>
           </div>
         </CardContent>
-        <CardFooter className="text-xs text-zinc-400 border-t pt-4">
+        <CardFooter className="text-xs text-muted-foreground border-t pt-4">
           Created {formatDistanceToNow(new Date(community.created_at))} ago
         </CardFooter>
       </Card>

@@ -442,13 +442,11 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black">
+    <div className="min-h-screen bg-background">
       <main className="container max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">
-            Settings
-          </h1>
-          <p className="text-zinc-600 dark:text-zinc-400">
+          <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
+          <p className="text-muted-foreground">
             Manage your account and sync your reading data
           </p>
         </div>
@@ -493,14 +491,14 @@ export default function SettingsPage() {
             </div>
 
             {syncStatus && (
-              <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+              <div className="mt-4 p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
                 <div className="flex items-start">
                   <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 mr-3 mt-0.5" />
                   <div>
-                    <p className="font-medium text-green-900 dark:text-green-100">
+                    <p className="font-medium text-foreground">
                       Last sync completed successfully
                     </p>
-                    <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                       Synced {syncStatus.books} books with reading status and
                       progress
                     </p>
@@ -509,7 +507,7 @@ export default function SettingsPage() {
               </div>
             )}
 
-            <div className="text-sm text-zinc-600 dark:text-zinc-400">
+            <div className="text-sm text-muted-foreground">
               <p>
                 <strong>Note:</strong> Syncing your data will fetch all your
                 reading states and progress from Literal.club and save them to
@@ -528,20 +526,12 @@ export default function SettingsPage() {
           <CardContent>
             <div className="space-y-3">
               <div>
-                <Label className="text-sm text-zinc-600 dark:text-zinc-400">
-                  Email
-                </Label>
-                <p className="text-zinc-900 dark:text-zinc-100">
-                  {user?.email}
-                </p>
+                <Label className="text-sm text-muted-foreground">Email</Label>
+                <p className="text-foreground">{user?.email}</p>
               </div>
               <div>
-                <Label className="text-sm text-zinc-600 dark:text-zinc-400">
-                  User ID
-                </Label>
-                <p className="text-zinc-900 dark:text-zinc-100 font-mono text-sm">
-                  {user?.id}
-                </p>
+                <Label className="text-sm text-muted-foreground">User ID</Label>
+                <p className="text-foreground font-mono text-sm">{user?.id}</p>
               </div>
             </div>
           </CardContent>
@@ -619,7 +609,7 @@ export default function SettingsPage() {
               {pendingBooks.map((item) => (
                 <div
                   key={item.book.id}
-                  className="flex gap-4 p-4 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
+                  className="flex gap-4 p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
                 >
                   {/* Book Cover */}
                   <div className="flex-shrink-0">
@@ -630,26 +620,26 @@ export default function SettingsPage() {
                         className="w-16 h-24 object-cover rounded shadow-sm"
                       />
                     ) : (
-                      <div className="w-16 h-24 bg-zinc-200 dark:bg-zinc-800 rounded flex items-center justify-center">
-                        <BookOpen className="h-6 w-6 text-zinc-400" />
+                      <div className="w-16 h-24 bg-muted rounded flex items-center justify-center">
+                        <BookOpen className="h-6 w-6 text-muted-foreground" />
                       </div>
                     )}
                   </div>
 
                   {/* Book Details */}
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                    <h4 className="font-semibold text-foreground truncate">
                       {item.book.title}
                     </h4>
                     {item.book.authors && item.book.authors.length > 0 && (
-                      <p className="text-sm text-zinc-500 dark:text-zinc-500 truncate">
+                      <p className="text-sm text-muted-foreground truncate">
                         {item.book.authors
                           .map((author) => author.name)
                           .join(", ")}
                       </p>
                     )}
                     {item.book.subtitle && (
-                      <p className="text-xs text-zinc-600 dark:text-zinc-400 truncate mt-0.5">
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">
                         {item.book.subtitle}
                       </p>
                     )}
