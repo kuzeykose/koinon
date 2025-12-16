@@ -25,6 +25,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { BookSearch } from "@/components/shelf/book-search";
 
 interface DashboardHeaderProps {
   userEmail: string | undefined;
@@ -60,80 +61,93 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
   return (
     <header className="border-b border-border bg-card">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between py-4">
-          <Link href="/dashboard" className="flex items-center space-x-2">
+        <div className="flex items-center justify-between gap-4 py-4">
+          <Link
+            href="/dashboard"
+            className="flex items-center space-x-2 flex-shrink-0"
+          >
             <BookOpen className="h-6 w-6 text-foreground" />
-            <span className="text-xl font-bold text-foreground">Koinon</span>
+            <span className="text-xl font-bold text-foreground hidden sm:inline">
+              Koinon
+            </span>
           </Link>
+
+          {/* Book Search */}
           <div className="flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="focus:outline-none">
-                  <Avatar className="h-9 w-9 cursor-pointer transition-opacity hover:opacity-80">
-                    <AvatarFallback className="bg-muted text-muted-foreground">
-                      {getInitials(userEmail)}
-                    </AvatarFallback>
-                  </Avatar>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel className="font-normal">
-                  <p className="text-sm font-medium">{userEmail}</p>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => router.push("/dashboard/settings")}
-                  className="cursor-pointer"
-                >
-                  Settings
-                </DropdownMenuItem>
-                <div className="flex items-center justify-between px-2 py-1.5">
-                  <span className="text-sm">Theme</span>
-                  <div className="flex items-center rounded-md border bg-muted p-0.5">
-                    <button
-                      onClick={() => setTheme("system")}
-                      className={cn(
-                        "rounded-sm p-1.5 transition-colors",
-                        theme === "system"
-                          ? "bg-background shadow-sm"
-                          : "hover:bg-background/50"
-                      )}
-                    >
-                      <Monitor className="h-2.5 w-2.5" />
-                    </button>
-                    <button
-                      onClick={() => setTheme("light")}
-                      className={cn(
-                        "rounded-sm p-1.5 transition-colors",
-                        theme === "light"
-                          ? "bg-background shadow-sm"
-                          : "hover:bg-background/50"
-                      )}
-                    >
-                      <Sun className="h-2.5 w-2.5" />
-                    </button>
-                    <button
-                      onClick={() => setTheme("dark")}
-                      className={cn(
-                        "rounded-sm p-1.5 transition-colors",
-                        theme === "dark"
-                          ? "bg-background shadow-sm"
-                          : "hover:bg-background/50"
-                      )}
-                    >
-                      <Moon className="h-2.5 w-2.5" />
-                    </button>
+            <div className="flex-1 max-w-md flex-shrink-0">
+              <BookSearch />
+            </div>
+
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="focus:outline-none">
+                    <Avatar className="h-9 w-9 cursor-pointer transition-opacity hover:opacity-80">
+                      <AvatarFallback className="bg-muted text-muted-foreground">
+                        {getInitials(userEmail)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel className="font-normal">
+                    <p className="text-sm font-medium">{userEmail}</p>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => router.push("/dashboard/settings")}
+                    className="cursor-pointer"
+                  >
+                    Settings
+                  </DropdownMenuItem>
+                  <div className="flex items-center justify-between px-2 py-1.5">
+                    <span className="text-sm">Theme</span>
+                    <div className="flex items-center rounded-md border bg-muted p-0.5">
+                      <button
+                        onClick={() => setTheme("system")}
+                        className={cn(
+                          "rounded-sm p-1.5 transition-colors",
+                          theme === "system"
+                            ? "bg-background shadow-sm"
+                            : "hover:bg-background/50"
+                        )}
+                      >
+                        <Monitor className="h-2.5 w-2.5" />
+                      </button>
+                      <button
+                        onClick={() => setTheme("light")}
+                        className={cn(
+                          "rounded-sm p-1.5 transition-colors",
+                          theme === "light"
+                            ? "bg-background shadow-sm"
+                            : "hover:bg-background/50"
+                        )}
+                      >
+                        <Sun className="h-2.5 w-2.5" />
+                      </button>
+                      <button
+                        onClick={() => setTheme("dark")}
+                        className={cn(
+                          "rounded-sm p-1.5 transition-colors",
+                          theme === "dark"
+                            ? "bg-background shadow-sm"
+                            : "hover:bg-background/50"
+                        )}
+                      >
+                        <Moon className="h-2.5 w-2.5" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={handleSignOut}
-                  className="cursor-pointer text-destructive focus:text-destructive"
-                >
-                  Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={handleSignOut}
+                    className="cursor-pointer text-destructive focus:text-destructive"
+                  >
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
         <nav className="-mb-px flex gap-6">
