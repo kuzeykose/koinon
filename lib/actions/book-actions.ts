@@ -17,6 +17,7 @@ export interface BookSearchResult {
   id?: string;
   isbn13: string | null;
   isbn10?: string | null;
+  openLibraryKey?: string | null;
   title: string;
   subtitle?: string | null;
   authors: { name: string }[];
@@ -25,6 +26,7 @@ export interface BookSearchResult {
   publisher?: string | null;
   page_count?: number | null;
   description?: string | null;
+  subjects?: string[];
   source: "database" | "openlibrary";
 }
 

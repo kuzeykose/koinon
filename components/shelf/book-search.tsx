@@ -1,19 +1,18 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Search, BookOpen, Loader2, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Search, BookOpen, Loader2, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { addBookToShelf, BookSearchResult } from "@/lib/actions/book-actions";
+import { BookSearchResult } from "@/lib/actions/book-actions";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
 
 export function BookSearch() {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<BookSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [addingBookId, setAddingBookId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -73,26 +72,29 @@ export function BookSearch() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleAddBook = async (book: BookSearchResult) => {
-    console.log("Adding book:", book);
-    const bookKey = book.isbn13 || book.title;
-    setAddingBookId(bookKey);
+  const handleViewBook = (book: BookSearchResult) => {
+    // Determine the best identifier for the book
+    // Priority: database ID > ISBN13 > Open Library key
+    let bookIdentifier: string;
+    if (book.id) {
+      bookIdentifier = book.id;
+    } else if (book.isbn13) {
+      bookIdentifier = book.isbn13;
+    } else if (book.openLibraryKey) {
+      bookIdentifier = book.openLibraryKey;
+    } else {
+      // Fallback: use a URL-safe version of title (not ideal but works)
+      console.warn("Book has no unique identifier, cannot navigate");
+      return;
+    }
 
-    // try {
-    //   const result = await addBookToShelf(book);
-    //   if (result.error) {
-    //     toast.error(result.error);
-    //   } else {
-    //     toast.success(`"${book.title}" added to your shelf!`);
-    //     setQuery("");
-    //     setResults([]);
-    //     setIsOpen(false);
-    //   }
-    // } catch (error) {
-    //   toast.error("Failed to add book");
-    // } finally {
-    //   setAddingBookId(null);
-    // }
+    // Close the dropdown and clear query
+    setQuery("");
+    setResults([]);
+    setIsOpen(false);
+
+    // Navigate to the book detail page
+    router.push(`/dashboard/book/${encodeURIComponent(bookIdentifier)}`);
   };
 
   const getAuthors = (authors: { name: string }[]) => {
@@ -122,18 +124,17 @@ export function BookSearch() {
       {isOpen && results.length > 0 && (
         <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-[400px] overflow-auto rounded-md border bg-popover p-1 shadow-lg">
           {results.map((book, index) => {
-            const bookKey = book.isbn13 || `${book.title}-${index}`;
-            const isAdding = addingBookId === (book.isbn13 || book.title);
+            const bookKey =
+              book.isbn13 || book.openLibraryKey || `${book.title}-${index}`;
             const authors = getAuthors(book.authors);
 
             return (
               <div
                 key={bookKey}
                 className={cn(
-                  "flex items-center gap-3 rounded-sm p-2 hover:bg-accent cursor-pointer transition-colors",
-                  isAdding && "opacity-50 pointer-events-none"
+                  "flex items-center gap-3 rounded-sm p-2 hover:bg-accent cursor-pointer transition-colors"
                 )}
-                onClick={() => handleAddBook(book)}
+                onClick={() => handleViewBook(book)}
               >
                 {/* Book Cover */}
                 <div className="flex-shrink-0 w-10 h-14 bg-muted rounded overflow-hidden">
@@ -174,23 +175,8 @@ export function BookSearch() {
                   )}
                 </div>
 
-                {/* Add Button */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="flex-shrink-0 h-8 w-8"
-                  disabled={isAdding}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleAddBook(book);
-                  }}
-                >
-                  {isAdding ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Plus className="h-4 w-4" />
-                  )}
-                </Button>
+                {/* View Details Arrow */}
+                <ChevronRight className="flex-shrink-0 h-4 w-4 text-muted-foreground" />
               </div>
             );
           })}

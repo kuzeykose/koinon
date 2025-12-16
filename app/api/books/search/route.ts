@@ -5,6 +5,7 @@ interface BookSearchResult {
   id?: string;
   isbn13: string | null;
   isbn10?: string | null;
+  openLibraryKey?: string | null;
   title: string;
   subtitle?: string | null;
   authors: { name: string }[];
@@ -62,9 +63,7 @@ async function searchBooksInOpenLibrary(
     const response = await fetch(
       `https://openlibrary.org/search.json?q=${encodeURIComponent(
         query
-      )}&limit=${
-        limit + excludeIsbns.size + 10
-      }&_spellcheck_count=0&fields=key,cover_i,title,subtitle,author_name,editions,name&mode=everything`
+      )}&limit=${limit + excludeIsbns.size + 10}`
     );
 
     if (!response.ok) {
@@ -98,9 +97,13 @@ async function searchBooksInOpenLibrary(
       // Get authors
       const authors = (doc.author_name || []).map((name: string) => ({ name }));
 
+      // Extract work key (e.g., "/works/OL45883W" -> "OL45883W")
+      const openLibraryKey = doc.key?.replace("/works/", "") || null;
+
       results.push({
         isbn13,
         isbn10,
+        openLibraryKey,
         title: doc.title,
         subtitle: doc.subtitle || null,
         authors,
