@@ -14,6 +14,7 @@ interface BookSearchResult {
   publisher?: string | null;
   page_count?: number | null;
   description?: string | null;
+  subjects?: string[];
   source: "database" | "openlibrary";
 }
 
@@ -37,20 +38,35 @@ async function searchBooksInDatabase(
     return [];
   }
 
-  return books.map((book) => ({
-    id: book.id,
-    isbn13: book.isbn13,
-    isbn10: book.isbn10,
-    title: book.title,
-    subtitle: book.subtitle,
-    authors: book.authors ? JSON.parse(book.authors) : [],
-    cover: book.cover,
-    published_date: book.published_date,
-    publisher: book.publisher,
-    page_count: book.page_count,
-    description: book.description,
-    source: "database" as const,
-  }));
+  return books.map((book) => {
+    // Safely parse subjects
+    let subjects: string[] = [];
+    if (Array.isArray(book.subjects)) {
+      subjects = book.subjects;
+    } else if (typeof book.subjects === "string") {
+      try {
+        subjects = JSON.parse(book.subjects);
+      } catch {
+        subjects = [];
+      }
+    }
+
+    return {
+      id: book.id,
+      isbn13: book.isbn13,
+      isbn10: book.isbn10,
+      title: book.title,
+      subtitle: book.subtitle,
+      authors: book.authors ? JSON.parse(book.authors) : [],
+      cover: book.cover,
+      published_date: book.published_date,
+      publisher: book.publisher,
+      page_count: book.page_count,
+      description: book.description,
+      subjects,
+      source: "database" as const,
+    };
+  });
 }
 
 // Search books from Open Library API
@@ -78,13 +94,20 @@ async function searchBooksInOpenLibrary(
       if (results.length >= limit) break;
 
       // Get ISBN13 from the book
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const isbn13 =
         doc.isbn?.find((isbn: string) => isbn.length === 13) || null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const isbn10 =
         doc.isbn?.find((isbn: string) => isbn.length === 10) || null;
 
       // Skip if we already have this book (by ISBN13)
       if (isbn13 && excludeIsbns.has(isbn13)) {
+        continue;
+      }
+      
+      // Also check ISBN10 if we haven't matched by ISBN13
+      if (isbn10 && excludeIsbns.has(isbn10)) {
         continue;
       }
 
@@ -95,7 +118,11 @@ async function searchBooksInOpenLibrary(
         : null;
 
       // Get authors
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const authors = (doc.author_name || []).map((name: string) => ({ name }));
+
+      // Get subjects (limit to 5)
+      const subjects = (doc.subject || []).slice(0, 5);
 
       // Extract work key (e.g., "/works/OL45883W" -> "OL45883W")
       const openLibraryKey = doc.key?.replace("/works/", "") || null;
@@ -112,6 +139,7 @@ async function searchBooksInOpenLibrary(
         publisher: doc.publisher?.[0] || null,
         page_count: doc.number_of_pages_median || null,
         description: null,
+        subjects,
         source: "openlibrary" as const,
       });
     }
@@ -143,12 +171,11 @@ export async function GET(request: NextRequest) {
   // First, search in our database
   const dbResults = await searchBooksInDatabase(query, LIMIT);
 
-  // Collect ISBN13s we already have
+  // Collect ISBNs we already have to avoid duplicates from Open Library
   const existingIsbns = new Set<string>();
   for (const book of dbResults) {
-    if (book.isbn13) {
-      existingIsbns.add(book.isbn13);
-    }
+    if (book.isbn13) existingIsbns.add(book.isbn13);
+    if (book.isbn10) existingIsbns.add(book.isbn10);
   }
 
   // If we have enough results from database, return them

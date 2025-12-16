@@ -88,19 +88,61 @@ async function getBookFromDatabase(
     userBook = data;
   }
 
+  // Fetch editions using the book_id
+  const { data: editionsData } = await supabase
+    .from("editions")
+    .select("*")
+    .eq("book_id", book.id);
+
+  const editions: BookEdition[] = (editionsData || []).map((e: any) => ({
+    key: e.id, // Use our DB ID as key
+    title: e.title || book.title, // Fallback to book title
+    isbn13: e.isbn13,
+    isbn10: e.isbn10,
+    cover: e.cover,
+    publisher: e.publisher,
+    publish_date: e.published_date, // Note: DB column is published_date, interface is publish_date
+    page_count: e.page_count,
+    language: e.language,
+  }));
+
+  // Safely parse authors and subjects
+  let authors = [];
+  if (Array.isArray(book.authors)) {
+    authors = book.authors;
+  } else if (typeof book.authors === "string") {
+    try {
+      authors = JSON.parse(book.authors);
+    } catch (e) {
+      authors = [];
+    }
+  }
+
+  let subjects = [];
+  if (Array.isArray(book.subjects)) {
+    subjects = book.subjects;
+  } else if (typeof book.subjects === "string") {
+    try {
+      subjects = JSON.parse(book.subjects);
+    } catch (e) {
+      subjects = [];
+    }
+  }
+
   return {
     id: book.id,
     isbn13: book.isbn13,
     isbn10: book.isbn10,
     title: book.title,
     subtitle: book.subtitle,
-    authors: book.authors ? JSON.parse(book.authors) : [],
+    authors: authors,
     cover: book.cover,
     published_date: book.published_date,
     publisher: book.publisher,
     page_count: book.page_count,
     description: book.description,
-    subjects: book.subjects ? JSON.parse(book.subjects) : [],
+    subjects: subjects,
+    editions: editions,
     source: "database" as const,
     userBook,
   };
