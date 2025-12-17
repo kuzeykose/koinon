@@ -10,6 +10,7 @@ import {
   Moon,
   Sun,
   Monitor,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
@@ -33,6 +34,7 @@ interface DashboardHeaderProps {
 const navItems = [
   { href: "/dashboard/shelf", label: "Shelf", icon: Library },
   { href: "/dashboard/communities", label: "Communities", icon: Users },
+  { href: "/dashboard/librarian", label: "Librarian", icon: Sparkles },
 ];
 
 export function DashboardHeader({ userEmail }: DashboardHeaderProps) {

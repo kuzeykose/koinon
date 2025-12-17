@@ -5,6 +5,12 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  '@ai-sdk/openai':
+    specifier: ^2.0.88
+    version: registry.npmjs.org/@ai-sdk/openai@2.0.88(zod@4.1.12)
+  '@ai-sdk/react':
+    specifier: ^2.0.116
+    version: registry.npmjs.org/@ai-sdk/react@2.0.116(react@19.2.0)(zod@4.1.12)
   '@hookform/resolvers':
     specifier: ^5.2.2
     version: 5.2.2(react-hook-form@7.66.0)
@@ -92,6 +98,9 @@ dependencies:
   '@supabase/supabase-js':
     specifier: ^2.81.1
     version: registry.npmjs.org/@supabase/supabase-js@2.81.1
+  ai:
+    specifier: ^5.0.114
+    version: registry.npmjs.org/ai@5.0.114(zod@4.1.12)
   class-variance-authority:
     specifier: ^0.7.1
     version: 0.7.1
@@ -179,7 +188,7 @@ devDependencies:
     specifier: ^1.4.0
     version: 1.4.0
   typescript:
-    specifier: ^5
+    specifier: ^5.9.3
     version: 5.9.3
 
 packages:
@@ -4766,6 +4775,80 @@ packages:
   /zod@4.1.12:
     resolution: {integrity: sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==, tarball: https://registry.npmjs.org/zod/-/zod-4.1.12.tgz}
 
+  registry.npmjs.org/@ai-sdk/gateway@2.0.21(zod@4.1.12):
+    resolution: {integrity: sha512-BwV7DU/lAm3Xn6iyyvZdWgVxgLu3SNXzl5y57gMvkW4nGhAOV5269IrJzQwGt03bb107sa6H6uJwWxc77zXoGA==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/@ai-sdk/gateway/-/gateway-2.0.21.tgz}
+    id: registry.npmjs.org/@ai-sdk/gateway/2.0.21
+    name: '@ai-sdk/gateway'
+    version: 2.0.21
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+    dependencies:
+      '@ai-sdk/provider': registry.npmjs.org/@ai-sdk/provider@2.0.0
+      '@ai-sdk/provider-utils': registry.npmjs.org/@ai-sdk/provider-utils@3.0.19(zod@4.1.12)
+      '@vercel/oidc': registry.npmjs.org/@vercel/oidc@3.0.5
+      zod: 4.1.12
+    dev: false
+
+  registry.npmjs.org/@ai-sdk/openai@2.0.88(zod@4.1.12):
+    resolution: {integrity: sha512-LlOf83haeZIiRUH1Zw1oEmqUfw5y54227CvndFoBpIkMJwQDGAB3VARUeOJ6iwAWDJjXSz06GdnEnhRU67Yatw==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/@ai-sdk/openai/-/openai-2.0.88.tgz}
+    id: registry.npmjs.org/@ai-sdk/openai/2.0.88
+    name: '@ai-sdk/openai'
+    version: 2.0.88
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+    dependencies:
+      '@ai-sdk/provider': registry.npmjs.org/@ai-sdk/provider@2.0.0
+      '@ai-sdk/provider-utils': registry.npmjs.org/@ai-sdk/provider-utils@3.0.19(zod@4.1.12)
+      zod: 4.1.12
+    dev: false
+
+  registry.npmjs.org/@ai-sdk/provider-utils@3.0.19(zod@4.1.12):
+    resolution: {integrity: sha512-W41Wc9/jbUVXVwCN/7bWa4IKe8MtxO3EyA0Hfhx6grnmiYlCvpI8neSYWFE0zScXJkgA/YK3BRybzgyiXuu6JA==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/@ai-sdk/provider-utils/-/provider-utils-3.0.19.tgz}
+    id: registry.npmjs.org/@ai-sdk/provider-utils/3.0.19
+    name: '@ai-sdk/provider-utils'
+    version: 3.0.19
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+    dependencies:
+      '@ai-sdk/provider': registry.npmjs.org/@ai-sdk/provider@2.0.0
+      '@standard-schema/spec': registry.npmjs.org/@standard-schema/spec@1.1.0
+      eventsource-parser: registry.npmjs.org/eventsource-parser@3.0.6
+      zod: 4.1.12
+    dev: false
+
+  registry.npmjs.org/@ai-sdk/provider@2.0.0:
+    resolution: {integrity: sha512-6o7Y2SeO9vFKB8lArHXehNuusnpddKPk7xqL7T2/b+OvXMRIXUO1rR4wcv1hAFUAT9avGZshty3Wlua/XA7TvA==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/@ai-sdk/provider/-/provider-2.0.0.tgz}
+    name: '@ai-sdk/provider'
+    version: 2.0.0
+    engines: {node: '>=18'}
+    dependencies:
+      json-schema: registry.npmjs.org/json-schema@0.4.0
+    dev: false
+
+  registry.npmjs.org/@ai-sdk/react@2.0.116(react@19.2.0)(zod@4.1.12):
+    resolution: {integrity: sha512-kWe7ViRUHiQIEbslrLc8D0Zjafl/QwpBpeZ9xyryVDV4DlocbhFmTD7CeyWUWpVSLA+oJKndExcdbiK7T0zEWA==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/@ai-sdk/react/-/react-2.0.116.tgz}
+    id: registry.npmjs.org/@ai-sdk/react/2.0.116
+    name: '@ai-sdk/react'
+    version: 2.0.116
+    engines: {node: '>=18'}
+    peerDependencies:
+      react: ^18 || ~19.0.1 || ~19.1.2 || ^19.2.1
+      zod: ^3.25.76 || ^4.1.8
+    peerDependenciesMeta:
+      zod:
+        optional: true
+    dependencies:
+      '@ai-sdk/provider-utils': registry.npmjs.org/@ai-sdk/provider-utils@3.0.19(zod@4.1.12)
+      ai: registry.npmjs.org/ai@5.0.114(zod@4.1.12)
+      react: 19.2.0
+      swr: registry.npmjs.org/swr@2.3.7(react@19.2.0)
+      throttleit: registry.npmjs.org/throttleit@2.1.0
+      zod: 4.1.12
+    dev: false
+
   registry.npmjs.org/@emnapi/core@1.7.1:
     resolution: {integrity: sha512-o1uhUASyo921r2XtHYOHy7gdkGLge8ghBEQHMWmyJFoXlpU58kIrhhN3w26lpQb6dspetweapMn2CSNwQ8I4wg==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/@emnapi/core/-/core-1.7.1.tgz}
     name: '@emnapi/core'
@@ -5170,6 +5253,19 @@ packages:
     requiresBuild: true
     dev: false
     optional: true
+
+  registry.npmjs.org/@opentelemetry/api@1.9.0:
+    resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/@opentelemetry/api/-/api-1.9.0.tgz}
+    name: '@opentelemetry/api'
+    version: 1.9.0
+    engines: {node: '>=8.0.0'}
+    dev: false
+
+  registry.npmjs.org/@standard-schema/spec@1.1.0:
+    resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/@standard-schema/spec/-/spec-1.1.0.tgz}
+    name: '@standard-schema/spec'
+    version: 1.1.0
+    dev: false
 
   registry.npmjs.org/@supabase/auth-js@2.81.1:
     resolution: {integrity: sha512-K20GgiSm9XeRLypxYHa5UCnybWc2K0ok0HLbqCej/wRxDpJxToXNOwKt0l7nO8xI1CyQ+GrNfU6bcRzvdbeopQ==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/@supabase/auth-js/-/auth-js-2.81.1.tgz}
@@ -5612,11 +5708,54 @@ packages:
     dev: true
     optional: true
 
+  registry.npmjs.org/@vercel/oidc@3.0.5:
+    resolution: {integrity: sha512-fnYhv671l+eTTp48gB4zEsTW/YtRgRPnkI2nT7x6qw5rkI1Lq2hTmQIpHPgyThI0znLK+vX2n9XxKdXZ7BUbbw==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/@vercel/oidc/-/oidc-3.0.5.tgz}
+    name: '@vercel/oidc'
+    version: 3.0.5
+    engines: {node: '>= 20'}
+    dev: false
+
+  registry.npmjs.org/ai@5.0.114(zod@4.1.12):
+    resolution: {integrity: sha512-q/lxcJA6avYn/TXTaE41VX6p9lN245mDU9bIGuPpfk6WxDMvmMoUKUIS0/aXAPYN3UmkUn/r9rvq/8C98RoCWw==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/ai/-/ai-5.0.114.tgz}
+    id: registry.npmjs.org/ai/5.0.114
+    name: ai
+    version: 5.0.114
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+    dependencies:
+      '@ai-sdk/gateway': registry.npmjs.org/@ai-sdk/gateway@2.0.21(zod@4.1.12)
+      '@ai-sdk/provider': registry.npmjs.org/@ai-sdk/provider@2.0.0
+      '@ai-sdk/provider-utils': registry.npmjs.org/@ai-sdk/provider-utils@3.0.19(zod@4.1.12)
+      '@opentelemetry/api': registry.npmjs.org/@opentelemetry/api@1.9.0
+      zod: 4.1.12
+    dev: false
+
   registry.npmjs.org/cookie@1.0.2:
     resolution: {integrity: sha512-9Kr/j4O16ISv8zBBhJoi4bXOYNTkFLOqSL3UDB0njXxCXNezjeyVrJyGOWtgfs/q2km1gwBcfH8q1yEGoMYunA==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/cookie/-/cookie-1.0.2.tgz}
     name: cookie
     version: 1.0.2
     engines: {node: '>=18'}
+    dev: false
+
+  registry.npmjs.org/dequal@2.0.3:
+    resolution: {integrity: sha512-0je+qPKHEMohvfRTCEo3CrPG6cAzAYgmzKyxRiYSSDkS6eGJdyVJm7WaYA5ECaAD9wLB2T4EEeymA5aFVcYXCA==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/dequal/-/dequal-2.0.3.tgz}
+    name: dequal
+    version: 2.0.3
+    engines: {node: '>=6'}
+    dev: false
+
+  registry.npmjs.org/eventsource-parser@3.0.6:
+    resolution: {integrity: sha512-Vo1ab+QXPzZ4tCa8SwIHJFaSzy4R6SHf7BY79rFBDf0idraZWAkYrDjDj8uWaSm3S2TK+hJ7/t1CEmZ7jXw+pg==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/eventsource-parser/-/eventsource-parser-3.0.6.tgz}
+    name: eventsource-parser
+    version: 3.0.6
+    engines: {node: '>=18.0.0'}
+    dev: false
+
+  registry.npmjs.org/json-schema@0.4.0:
+    resolution: {integrity: sha512-es94M3nTIfsEPisRafak+HDLfHXnKBhV3vU5eqPcS3flIWqcxJWgXHXiey3YrpaNsanY5ei1VoYEbOzijuq9BA==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/json-schema/-/json-schema-0.4.0.tgz}
+    name: json-schema
+    version: 0.4.0
     dev: false
 
   registry.npmjs.org/lightningcss-android-arm64@1.30.2:
@@ -5778,6 +5917,26 @@ packages:
     dev: false
     optional: true
 
+  registry.npmjs.org/swr@2.3.7(react@19.2.0):
+    resolution: {integrity: sha512-ZEquQ82QvalqTxhBVv/DlAg2mbmUjF4UgpPg9wwk4ufb9rQnZXh1iKyyKBqV6bQGu1Ie7L1QwSYO07qFIa1p+g==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/swr/-/swr-2.3.7.tgz}
+    id: registry.npmjs.org/swr/2.3.7
+    name: swr
+    version: 2.3.7
+    peerDependencies:
+      react: ^16.11.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+    dependencies:
+      dequal: registry.npmjs.org/dequal@2.0.3
+      react: 19.2.0
+      use-sync-external-store: registry.npmjs.org/use-sync-external-store@1.6.0(react@19.2.0)
+    dev: false
+
+  registry.npmjs.org/throttleit@2.1.0:
+    resolution: {integrity: sha512-nt6AMGKW1p/70DF/hGBdJB57B8Tspmbp5gfJ8ilhLnt7kkr2ye7hzD6NVG8GGErk2HWF34igrL2CXmNIkzKqKw==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/throttleit/-/throttleit-2.1.0.tgz}
+    name: throttleit
+    version: 2.1.0
+    engines: {node: '>=18'}
+    dev: false
+
   registry.npmjs.org/tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/tslib/-/tslib-2.8.1.tgz}
     name: tslib
@@ -5787,6 +5946,17 @@ packages:
     resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/undici-types/-/undici-types-6.21.0.tgz}
     name: undici-types
     version: 6.21.0
+    dev: false
+
+  registry.npmjs.org/use-sync-external-store@1.6.0(react@19.2.0):
+    resolution: {integrity: sha512-Pp6GSwGP/NrPIrxVFAIkOQeyw8lFenOHijQWkUTrDvrF4ALqylP2C/KCkeS9dpUM3KvYRQhna5vt7IL95+ZQ9w==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/use-sync-external-store/-/use-sync-external-store-1.6.0.tgz}
+    id: registry.npmjs.org/use-sync-external-store/1.6.0
+    name: use-sync-external-store
+    version: 1.6.0
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+    dependencies:
+      react: 19.2.0
     dev: false
 
   registry.npmjs.org/ws@8.18.3:

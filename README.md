@@ -2,6 +2,14 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+### Prerequisites
+
+1. Copy `.env.example` to `.env.local` and fill in the required environment variables:
+   - `OPENAI_API_KEY`: Your OpenAI API key for the AI Librarian chatbot (get it from [OpenAI Platform](https://platform.openai.com/api-keys))
+   - Supabase credentials (see [SUPABASE_SETUP.md](./SUPABASE_SETUP.md))
+
+### Running the Development Server
+
 First, run the development server:
 
 ```bash
@@ -35,8 +43,22 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
+## Features
+
+### AI Librarian Chatbot
+
+The application includes an AI-powered librarian assistant that helps users discover books and get personalized recommendations. The chatbot:
+
+- Provides personalized book recommendations based on your interests
+- Discusses books, authors, and literary genres
+- Helps you discover new reading material
+- Acts as a knowledgeable and friendly librarian
+
+**Access the chatbot:** Look for the sparkles icon (✨) in the bottom-right corner of the dashboard.
+
 ## Project Documentation
 
+- [AI Librarian Chatbot](./AI_CHATBOT.md)
 - [Settings Page & Literal.club Integration](./SETTINGS.md)
 - [Database Schema](./DATABASE_SCHEMA.md)
 - [Supabase Setup](./SUPABASE_SETUP.md)
