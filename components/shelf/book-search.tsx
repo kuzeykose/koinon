@@ -73,19 +73,14 @@ export function BookSearch() {
   }, []);
 
   const handleViewBook = (book: BookSearchResult) => {
+    console.log("book", JSON.stringify(book, null, 2));
     // Determine the best identifier for the book
     // Priority: database ID > ISBN13 > Open Library key
-    let bookIdentifier: string;
-    if (book.id) {
-      bookIdentifier = book.id;
-    } else if (book.isbn13) {
-      bookIdentifier = book.isbn13;
-    } else if (book.openLibraryKey) {
-      bookIdentifier = book.openLibraryKey;
-    } else {
-      // Fallback: use a URL-safe version of title (not ideal but works)
-      console.warn("Book has no unique identifier, cannot navigate");
-      return;
+    let bookIdentifier: string = "";
+    if (book.source === "database") {
+      bookIdentifier = book.id as string;
+    } else if (book.source === "openlibrary") {
+      bookIdentifier = book.openLibraryKey as string;
     }
 
     // Close the dropdown and clear query
@@ -103,8 +98,8 @@ export function BookSearch() {
   };
 
   return (
-    <div ref={containerRef} className="relative w-full">
-      <div className="relative">
+    <div ref={containerRef} className="relative">
+      <div className="relative w-64 focus-within:w-96 transition-all duration-300 ease-in-out">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           ref={inputRef}

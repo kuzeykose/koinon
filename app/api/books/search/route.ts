@@ -18,7 +18,7 @@ interface BookSearchResult {
   source: "database" | "openlibrary";
 }
 
-const LIMIT = 5;
+const LIMIT = 10;
 
 // Search books in our database
 async function searchBooksInDatabase(
@@ -79,7 +79,9 @@ async function searchBooksInOpenLibrary(
     const response = await fetch(
       `https://openlibrary.org/search.json?q=${encodeURIComponent(
         query
-      )}&limit=${limit + excludeIsbns.size + 10}`
+      )}&limit=${
+        limit + excludeIsbns.size + 10
+      }&fields=key,cover_i,title,subtitle,author_name,editions,name,isbn,publish_date`
     );
 
     if (!response.ok) {
@@ -88,6 +90,7 @@ async function searchBooksInOpenLibrary(
     }
 
     const data = await response.json();
+    console.log("data", JSON.stringify(data, null, 2));
     const results: BookSearchResult[] = [];
 
     for (const doc of data.docs || []) {
@@ -105,7 +108,7 @@ async function searchBooksInOpenLibrary(
       if (isbn13 && excludeIsbns.has(isbn13)) {
         continue;
       }
-      
+
       // Also check ISBN10 if we haven't matched by ISBN13
       if (isbn10 && excludeIsbns.has(isbn10)) {
         continue;
@@ -171,6 +174,7 @@ export async function GET(request: NextRequest) {
   // First, search in our database
   const dbResults = await searchBooksInDatabase(query, LIMIT);
 
+  // console.log("dbResults", dbResults);
   // Collect ISBNs we already have to avoid duplicates from Open Library
   const existingIsbns = new Set<string>();
   for (const book of dbResults) {
@@ -190,6 +194,7 @@ export async function GET(request: NextRequest) {
     remainingSlots,
     existingIsbns
   );
+  // console.log("openLibraryResults", openLibraryResults);
 
   // Combine results, database first
   const results = [...dbResults, ...openLibraryResults].slice(0, LIMIT);

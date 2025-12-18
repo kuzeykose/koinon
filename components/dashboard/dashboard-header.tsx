@@ -74,9 +74,7 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
 
           {/* Book Search */}
           <div className="flex items-center gap-2">
-            <div className="flex-1 max-w-md flex-shrink-0">
-              <BookSearch />
-            </div>
+            <BookSearch />
 
             <div className="flex items-center gap-2 flex-shrink-0">
               <DropdownMenu>
