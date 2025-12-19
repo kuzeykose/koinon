@@ -41,7 +41,7 @@ export interface BookDetails {
 
 // Fetch book from our database by ID, ISBN13, or Open Library key
 async function getBookFromDatabase(
-  identifier: string
+  identifier: string,
 ): Promise<BookDetails | null> {
   const supabase = await createClient();
   const {
@@ -94,7 +94,7 @@ async function getBookFromDatabase(
     .select("*")
     .eq("book_id", book.id);
 
-  const editions: BookEdition[] = (editionsData || []).map((e: any) => ({
+  const editions: BookEdition[] = (editionsData || []).map((e) => ({
     key: e.id, // Use our DB ID as key
     title: e.title || book.title, // Fallback to book title
     isbn13: e.isbn13,
@@ -115,6 +115,7 @@ async function getBookFromDatabase(
       authors = JSON.parse(book.authors);
     } catch (e) {
       authors = [];
+      console.log("Catch json parse", e);
     }
   }
 
@@ -126,6 +127,7 @@ async function getBookFromDatabase(
       subjects = JSON.parse(book.subjects);
     } catch (e) {
       subjects = [];
+      console.log("Catch json parse", e);
     }
   }
 
@@ -162,10 +164,10 @@ function isValidEditionTitle(workTitle: string, editionTitle: string): boolean {
   if (e.length < w.length * 0.5 && w.includes(e)) {
     return false;
   }
-  
+
   // If work title contains edition title (and length is decent), or vice versa.
   if (w.includes(e) || e.includes(w)) {
-     return true;
+    return true;
   }
 
   return false;
@@ -173,12 +175,12 @@ function isValidEditionTitle(workTitle: string, editionTitle: string): boolean {
 
 // Fetch book from Open Library by work key
 async function getBookFromOpenLibrary(
-  workKey: string
+  workKey: string,
 ): Promise<BookDetails | null> {
   try {
     // Fetch work details
     const workResponse = await fetch(
-      `https://openlibrary.org/works/${workKey}.json`
+      `https://openlibrary.org/works/${workKey}.json`,
     );
 
     if (!workResponse.ok) {
@@ -203,7 +205,7 @@ async function getBookFromOpenLibrary(
         if (authorKey) {
           try {
             const authorResponse = await fetch(
-              `https://openlibrary.org${authorKey}.json`
+              `https://openlibrary.org${authorKey}.json`,
             );
             if (authorResponse.ok) {
               const authorData = await authorResponse.json();
@@ -236,7 +238,7 @@ async function getBookFromOpenLibrary(
     try {
       // Limit fetch to get enough candidates for filtering
       const editionsResponse = await fetch(
-        `https://openlibrary.org/works/${workKey}/editions.json?limit=100`
+        `https://openlibrary.org/works/${workKey}/editions.json?limit=100`,
       );
       if (editionsResponse.ok) {
         const editionsData = await editionsResponse.json();
@@ -246,7 +248,7 @@ async function getBookFromOpenLibrary(
         const mappedEditions = rawEditions.map((edition: any) => {
           const editionKey = edition.key?.replace("/books/", "") || null;
           const editionCoverId = edition.covers?.[0];
-          
+
           return {
             key: editionKey,
             title: edition.title || work.title,
@@ -263,36 +265,38 @@ async function getBookFromOpenLibrary(
               edition.languages?.[0]?.key?.replace("/languages/", "") || null,
             // Internal props for sorting/dedup
             _hasCover: !!editionCoverId,
-            _publishYear: edition.publish_date ? parseInt(edition.publish_date.match(/\d{4}/)?.[0] || "0") : 0
+            _publishYear: edition.publish_date
+              ? parseInt(edition.publish_date.match(/\d{4}/)?.[0] || "0")
+              : 0,
           };
         });
 
         // 2. Filter bad titles
-        const filteredEditions = mappedEditions.filter((e: any) => 
-          isValidEditionTitle(work.title, e.title)
+        const filteredEditions = mappedEditions.filter((e: any) =>
+          isValidEditionTitle(work.title, e.title),
         );
 
         // 3. Deduplicate (group by normalized title + publisher + year)
         const uniqueEditionsMap = new Map();
-        
-        for (const edition of filteredEditions) {
-           const normTitle = edition.title.toLowerCase().trim();
-           const normPub = (edition.publisher || "").toLowerCase().trim();
-           const year = edition._publishYear;
-           
-           const key = `${normTitle}|${normPub}|${year}`;
 
-           if (!uniqueEditionsMap.has(key)) {
-             uniqueEditionsMap.set(key, edition);
-           } else {
-             // Keep the better one (prefer cover, then isbn)
-             const existing = uniqueEditionsMap.get(key);
-             if (!existing._hasCover && edition._hasCover) {
-                uniqueEditionsMap.set(key, edition);
-             } else if (!existing.isbn13 && edition.isbn13) {
-                uniqueEditionsMap.set(key, edition);
-             }
-           }
+        for (const edition of filteredEditions) {
+          const normTitle = edition.title.toLowerCase().trim();
+          const normPub = (edition.publisher || "").toLowerCase().trim();
+          const year = edition._publishYear;
+
+          const key = `${normTitle}|${normPub}|${year}`;
+
+          if (!uniqueEditionsMap.has(key)) {
+            uniqueEditionsMap.set(key, edition);
+          } else {
+            // Keep the better one (prefer cover, then isbn)
+            const existing = uniqueEditionsMap.get(key);
+            if (!existing._hasCover && edition._hasCover) {
+              uniqueEditionsMap.set(key, edition);
+            } else if (!existing.isbn13 && edition.isbn13) {
+              uniqueEditionsMap.set(key, edition);
+            }
+          }
         }
 
         editions = Array.from(uniqueEditionsMap.values());
@@ -358,7 +362,7 @@ async function getBookFromOpenLibrary(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const supabase = await createClient();
   const {
@@ -374,7 +378,7 @@ export async function GET(
   if (!id) {
     return NextResponse.json(
       { error: "Book identifier required" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 

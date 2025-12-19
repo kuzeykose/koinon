@@ -1,16 +1,7 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import {
-  BookOpen,
-  LogOut,
-  Settings,
-  Library,
-  Users,
-  Moon,
-  Sun,
-  Monitor,
-} from "lucide-react";
+import { BookOpen, Library, Users, Moon, Sun, Monitor } from "lucide-react";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
 import { createClient } from "@/lib/supabase/client";
@@ -107,7 +98,7 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
                           "rounded-sm p-1.5 transition-colors",
                           theme === "system"
                             ? "bg-background shadow-sm"
-                            : "hover:bg-background/50"
+                            : "hover:bg-background/50",
                         )}
                       >
                         <Monitor className="h-2.5 w-2.5" />
@@ -118,7 +109,7 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
                           "rounded-sm p-1.5 transition-colors",
                           theme === "light"
                             ? "bg-background shadow-sm"
-                            : "hover:bg-background/50"
+                            : "hover:bg-background/50",
                         )}
                       >
                         <Sun className="h-2.5 w-2.5" />
@@ -129,7 +120,7 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
                           "rounded-sm p-1.5 transition-colors",
                           theme === "dark"
                             ? "bg-background shadow-sm"
-                            : "hover:bg-background/50"
+                            : "hover:bg-background/50",
                         )}
                       >
                         <Moon className="h-2.5 w-2.5" />
@@ -159,7 +150,7 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
                   "flex items-center gap-2 border-b-2 px-1 py-3 text-sm font-medium transition-colors",
                   isActive
                     ? "border-foreground text-foreground"
-                    : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
+                    : "border-transparent text-muted-foreground hover:border-border hover:text-foreground",
                 )}
               >
                 <item.icon className="h-4 w-4" />
