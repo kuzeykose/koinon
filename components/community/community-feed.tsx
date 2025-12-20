@@ -77,7 +77,7 @@ export async function CommunityFeed({
           cover,
           authors
         )
-      `
+      `,
     )
     .eq("status", "IS_READING")
     .in("user_id", memberIds)
@@ -187,7 +187,7 @@ export async function CommunityFeed({
                     {pageNum}
                   </PaginationLink>
                 </PaginationItem>
-              )
+              ),
             )}
 
             <PaginationItem>

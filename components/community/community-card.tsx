@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar } from "lucide-react";
+import { Users } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 

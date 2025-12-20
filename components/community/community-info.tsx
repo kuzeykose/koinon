@@ -2,7 +2,6 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { Community } from "./types";
 
 interface CommunityInfoProps {
   communityId: string;
