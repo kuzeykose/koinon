@@ -30,41 +30,52 @@ const readingStatuses = {
   ABANDONED: "Abandoned",
 };
 
-interface Book {
-  id: string;
-  title: string;
-  cover?: string;
-  authors?: string;
-}
-
 export interface UserBook {
-  book_id: string;
+  id: string;
+  user_id: string;
+
+  // Book identifier
+  book_key?: string | null;
+
+  // Book metadata
+  title: string;
+  cover?: string | null;
+
+  // Authors
+  authors?: string | null; // JSON string
+
+  // Publication details
+  published_date?: string | null;
+  page_count?: number | null;
+  language?: string | null;
+
+  // Reading status
   status: ReadingStatus;
   progress: number;
   capacity?: number;
   unit?: string;
   completed?: boolean;
+
+  created_at: string;
+  updated_at: string;
 }
 
 interface BookCardProps {
-  book: Book;
-  userBook?: UserBook;
+  userBook: UserBook;
 }
 
-export function BookCard({ book, userBook }: BookCardProps) {
+export function BookCard({ userBook }: BookCardProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [status, setStatus] = useState<ReadingStatus>(
-    userBook?.status || "IS_READING"
-  );
-  const [progress, setProgress] = useState(userBook?.progress || 0);
-  const [capacity, setCapacity] = useState(userBook?.capacity || 0);
-  const [unit, setUnit] = useState(userBook?.unit || "pages");
+  const [status, setStatus] = useState<ReadingStatus>(userBook.status);
+  const [progress, setProgress] = useState(userBook.progress || 0);
+  const [capacity, setCapacity] = useState(userBook.capacity || 0);
+  const [unit, setUnit] = useState(userBook.unit || "pages");
 
   const displayStatus =
-    readingStatuses[userBook?.status as keyof typeof readingStatuses] ||
+    readingStatuses[userBook.status as keyof typeof readingStatuses] ||
     "Unknown";
-  const displayProgress = userBook?.capacity
+  const displayProgress = userBook.capacity
     ? `${userBook.progress}/${userBook.capacity} ${userBook.unit || "pages"}`
     : null;
 
@@ -72,7 +83,7 @@ export function BookCard({ book, userBook }: BookCardProps) {
     setIsLoading(true);
     try {
       const result = await updateUserBook({
-        bookId: book.id,
+        id: userBook.id,
         status,
         progress,
         capacity: capacity || undefined,
@@ -91,23 +102,23 @@ export function BookCard({ book, userBook }: BookCardProps) {
     }
   };
 
-  const authors = book.authors
-    ? JSON.parse(book.authors)
+  const authors = userBook.authors
+    ? JSON.parse(userBook.authors)
         .map((a: { name: string }) => a.name)
         .join(", ")
     : null;
 
-  const progressPercent = userBook?.capacity
+  const progressPercent = userBook.capacity
     ? Math.min((userBook.progress / userBook.capacity) * 100, 100)
     : 0;
 
   return (
     <div className="flex gap-4 items-center">
       <div className="flex-shrink-0 w-12 h-16 bg-muted rounded overflow-hidden">
-        {book.cover ? (
+        {userBook.cover ? (
           <img
-            src={book.cover}
-            alt={book.title}
+            src={userBook.cover}
+            alt={userBook.title}
             className="w-full h-full object-cover"
           />
         ) : (
@@ -120,7 +131,7 @@ export function BookCard({ book, userBook }: BookCardProps) {
       <div className="flex-1 min-w-0 flex items-center gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h4 className="font-medium text-sm truncate">{book.title}</h4>
+            <h4 className="font-medium text-sm truncate">{userBook.title}</h4>
             {/* Status badge for mobile - next to title */}
             {displayStatus !== "Unknown" && (
               <Badge
@@ -190,7 +201,7 @@ export function BookCard({ book, userBook }: BookCardProps) {
           <SheetHeader>
             <SheetTitle>Update Reading Progress</SheetTitle>
             <SheetDescription>
-              Update your reading status and progress for &quot;{book.title}
+              Update your reading status and progress for &quot;{userBook.title}
               &quot;
             </SheetDescription>
           </SheetHeader>

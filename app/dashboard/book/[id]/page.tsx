@@ -4,15 +4,16 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   BookOpen,
   ArrowLeft,
   Plus,
   Loader2,
-  Check,
   Calendar,
   Building2,
   BookText,
+  CheckCircle2,
 } from "lucide-react";
 import { addBookToShelf } from "@/lib/actions/book-actions";
 import { toast } from "sonner";
@@ -74,6 +75,7 @@ export default function BookDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [inUserShelf, setInUserShelf] = useState(false);
 
   const id = params.id as string;
 
@@ -95,6 +97,7 @@ export default function BookDetailPage() {
         }
         const data = await response.json();
         setBookDetails(data.work || data.book);
+        setInUserShelf(data.inUserShelf || false);
       } catch (err) {
         console.error("Error fetching book details:", err);
         setError("Failed to load book details");
@@ -111,42 +114,34 @@ export default function BookDetailPage() {
   const handleAddToShelf = async () => {
     if (!bookDetails) return;
 
+    // Use the appropriate key - work key for works, edition key for editions
+    let bookKey: string | undefined;
+
+    if (isWorkView) {
+      bookKey = bookDetails.workKey;
+    } else if (isEditionView) {
+      bookKey = bookDetails.openLibraryKey;
+    }
+
+    const bookData = {
+      bookKey,
+      title: bookDetails.title,
+      authors: bookDetails.authors,
+      cover: bookDetails.cover,
+      published_date: isEditionView ? bookDetails.publishDate : undefined,
+      page_count: isEditionView ? bookDetails.pageCount : undefined,
+      language: isEditionView ? bookDetails.language : undefined,
+      source: bookDetails.source,
+    };
+
     setIsAdding(true);
     try {
-      // Convert details to the format expected by addBookToShelf
-      const bookData = isWork(bookDetails)
-        ? {
-            openLibraryKey: bookDetails.workKey,
-            title: bookDetails.title,
-            subtitle: bookDetails.subtitle,
-            authors: bookDetails.authors,
-            cover: bookDetails.cover,
-            description: bookDetails.description,
-            subjects: bookDetails.subjects,
-            isbn13: null,
-            source: bookDetails.source,
-          }
-        : {
-            openLibraryKey: bookDetails.workKey, // Use work key for grouping
-            isbn13: bookDetails.isbn13,
-            isbn10: bookDetails.isbn10,
-            title: bookDetails.title,
-            subtitle: bookDetails.subtitle,
-            authors: bookDetails.authors,
-            cover: bookDetails.cover,
-            published_date: bookDetails.publishDate,
-            publisher: bookDetails.publisher,
-            page_count: bookDetails.pageCount,
-            description: bookDetails.description,
-            subjects: bookDetails.subjects,
-            source: bookDetails.source,
-          };
-
       const result = await addBookToShelf(bookData);
       if (result.error) {
         toast.error(result.error);
       } else {
         toast.success(`"${bookDetails.title}" added to your shelf!`);
+        setInUserShelf(true); // Switch UI to show "already in shelf" message
         router.refresh();
       }
     } catch (err) {
@@ -274,22 +269,37 @@ export default function BookDetailPage() {
             )}
           </div>
 
+          {/* Info if book is already in shelf */}
+          {inUserShelf && (
+            <Alert
+              variant="default"
+              className="border-green-500/50 bg-green-50 dark:bg-green-950/20"
+            >
+              <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-500" />
+              <AlertDescription className="text-green-800 dark:text-green-200">
+                This book is already in your shelf
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Action Buttons */}
-          {/* <div className="pt-2">
-            <Button onClick={handleAddToShelf} disabled={isAdding}>
-              {isAdding ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Adding...
-                </>
-              ) : (
-                <>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add to Shelf
-                </>
-              )}
-            </Button>
-          </div> */}
+          {!inUserShelf && (
+            <div className="pt-2">
+              <Button onClick={handleAddToShelf} disabled={isAdding}>
+                {isAdding ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add to Shelf
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 

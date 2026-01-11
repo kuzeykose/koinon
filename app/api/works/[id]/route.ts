@@ -110,7 +110,18 @@ export async function GET(
 
   const work = await getWorkFromOpenLibrary(id);
   if (work) {
-    return NextResponse.json({ work });
+    // Check if user has this book in their shelf
+    const { data: existingUserBook } = await supabase
+      .from("user_books")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("book_key", id)
+      .maybeSingle();
+
+    return NextResponse.json({
+      work,
+      inUserShelf: !!existingUserBook,
+    });
   }
 
   return NextResponse.json({ error: "Work not found" }, { status: 404 });
