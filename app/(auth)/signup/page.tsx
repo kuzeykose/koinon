@@ -29,7 +29,7 @@ export default function SignupPage() {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSocialSignup = async (provider: "google" | "azure") => {
+  const handleSocialSignup = async (provider: "google") => {
     setError(null);
     setLoading(true);
 
@@ -177,15 +177,6 @@ export default function SignupPage() {
               disabled={loading}
             >
               Continue with Google
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={() => handleSocialSignup("azure")}
-              disabled={loading}
-            >
-              Continue with Microsoft
             </Button>
           </div>
 

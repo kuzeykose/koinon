@@ -26,7 +26,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleSocialLogin = async (provider: "google" | "azure") => {
+  const handleSocialLogin = async (provider: "google") => {
     setError(null);
     setLoading(true);
 
@@ -110,15 +110,6 @@ export default function LoginPage() {
               disabled={loading}
             >
               Continue with Google
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={() => handleSocialLogin("azure")}
-              disabled={loading}
-            >
-              Continue with Microsoft
             </Button>
           </div>
 
