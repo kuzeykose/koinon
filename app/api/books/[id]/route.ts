@@ -153,7 +153,18 @@ export async function GET(
 
   const bookEdition = await getBookEditionFromOpenLibrary(id);
   if (bookEdition) {
-    return NextResponse.json({ book: bookEdition });
+    // Check if user has this book in their shelf
+    const { data: existingUserBook } = await supabase
+      .from("user_books")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("book_key", id)
+      .maybeSingle();
+
+    return NextResponse.json({
+      book: bookEdition,
+      inUserShelf: !!existingUserBook,
+    });
   }
 
   return NextResponse.json(
