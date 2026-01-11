@@ -96,7 +96,7 @@ export function UserBooksCard({
                       style={{
                         width: `${Math.min(
                           100,
-                          ((activity.progress || 0) / activity.capacity) * 100
+                          ((activity.progress || 0) / activity.capacity) * 100,
                         )}%`,
                       }}
                     />

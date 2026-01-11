@@ -2,49 +2,70 @@
 
 ## Tables to Create in Supabase
 
-### 1. books table
+### 1. books table (The "Work")
+
+Represents the abstract "Work" (e.g., "Moby Dick").
 
 ```sql
 CREATE TABLE books (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  isbn13 TEXT UNIQUE,  -- Used for deduplication when available
-  isbn10 TEXT,
-  slug TEXT,
+  work_key TEXT UNIQUE, -- Used for grouping editions (e.g. OL123W or custom UUID)
   title TEXT NOT NULL,
   subtitle TEXT,
   description TEXT,
+  authors JSONB,
+  subjects JSONB,
+  -- Legacy columns (kept for backward compatibility during migration, moved to editions)
+  isbn13 TEXT UNIQUE,
+  isbn10 TEXT,
   language TEXT,
   page_count INTEGER,
   published_date TEXT,
   publisher TEXT,
   cover TEXT,
-  authors JSONB,
-  subjects JSONB,
+  
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Add indexes for faster queries
+-- Indexes
 CREATE INDEX idx_books_title ON books(title);
-CREATE INDEX idx_books_isbn13 ON books(isbn13);
-CREATE INDEX idx_books_isbn10 ON books(isbn10);
+CREATE INDEX idx_books_work_key ON books(work_key);
+```
 
--- Enable RLS (optional - books can be public or user-specific)
+### 1a. editions table (The specific versions)
+
+Represents specific published versions (e.g., "Moby Dick, Penguin Classics 2003").
+
+```sql
+CREATE TABLE editions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  book_id UUID NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+  title TEXT,
+  isbn13 TEXT,
+  isbn10 TEXT,
+  publisher TEXT,
+  page_count INTEGER,
+  published_date TEXT,
+  cover TEXT,
+  language TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_editions_book_id ON editions(book_id);
+CREATE INDEX idx_editions_isbn13 ON editions(isbn13);
+CREATE INDEX idx_editions_isbn10 ON editions(isbn10);
+```
+
+### RLS Policies for Books & Editions
+All authenticated users can read/write to these tables (shared catalog).
+```sql
 ALTER TABLE books ENABLE ROW LEVEL SECURITY;
+ALTER TABLE editions ENABLE ROW LEVEL SECURITY;
 
--- Allow all authenticated users to read books
-CREATE POLICY "Authenticated users can view books"
-  ON books FOR SELECT
-  USING (auth.role() = 'authenticated');
-
--- Allow all authenticated users to insert/update books
-CREATE POLICY "Authenticated users can insert books"
-  ON books FOR INSERT
-  WITH CHECK (auth.role() = 'authenticated');
-
-CREATE POLICY "Authenticated users can update books"
-  ON books FOR UPDATE
-  USING (auth.role() = 'authenticated');
+-- (Policies omitted for brevity, generally "Authenticated users can select/insert/update")
 ```
 
 ### 2. user_books table

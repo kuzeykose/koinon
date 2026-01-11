@@ -48,7 +48,10 @@ export default async function ShelfPage() {
       </div>
       {(!books || books.length === 0) && (
         <div className="text-center py-12 text-muted-foreground">
-          <p>No books in your shelf yet.</p>
+          <p>
+            No books in your shelf yet. Use the search in the header to add
+            books!
+          </p>
         </div>
       )}
     </div>
