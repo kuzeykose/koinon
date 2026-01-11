@@ -13,9 +13,8 @@ This document summarizes the recent authentication enhancements made to the Book
 - ✅ **Display Name Field**: Users can now enter their display name during signup
   - Added validation to ensure display name is not empty
   - Stored in user metadata and profiles table
-- ✅ **Social Authentication**: Added three social sign-in options:
+- ✅ **Social Authentication**: Added two social sign-in options:
   - Google Sign In
-  - Apple Sign In
   - Microsoft Sign In
 
 #### UI Improvements:
@@ -31,9 +30,8 @@ This document summarizes the recent authentication enhancements made to the Book
 
 #### New Features:
 
-- ✅ **Social Authentication**: Added the same three social sign-in options
+- ✅ **Social Authentication**: Added the same two social sign-in options
   - Google Sign In
-  - Apple Sign In
   - Microsoft Sign In
 
 #### UI Improvements:
@@ -79,7 +77,6 @@ This document summarizes the recent authentication enhancements made to the Book
 
 - Step-by-step instructions for each provider
 - Google OAuth setup
-- Apple Sign In setup
 - Microsoft Azure AD setup
 - Supabase configuration
 - Testing procedures
@@ -165,7 +162,6 @@ Run the migration:
 Follow the detailed guide in `SOCIAL_AUTH_SETUP.md` to configure:
 
 - Google OAuth credentials
-- Apple Sign In (requires Apple Developer account)
 - Microsoft Azure AD
 
 ### 3. Supabase Dashboard
@@ -188,13 +184,6 @@ Follow the detailed guide in `SOCIAL_AUTH_SETUP.md` to configure:
 - [ ] Click "Continue with Google" button
 - [ ] Successfully authenticate with Google
 - [ ] Profile created with name and avatar from Google
-- [ ] Redirect to dashboard after authentication
-
-### Apple Authentication
-
-- [ ] Click "Continue with Apple" button
-- [ ] Successfully authenticate with Apple
-- [ ] Profile created with name from Apple
 - [ ] Redirect to dashboard after authentication
 
 ### Microsoft Authentication

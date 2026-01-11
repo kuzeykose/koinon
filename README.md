@@ -35,8 +35,25 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
+## Features
+
+### Authentication
+
+- **Email/Password Authentication**: Traditional signup with email and password
+- **Display Name**: Users can set their display name during signup
+- **Social Authentication**: Sign in with Google or Microsoft
+- **Profile Management**: Automatic profile creation for all authentication methods
+
+### Book Management
+
+- Search and add books from Open Library
+- Track reading status and progress
+- Create and join book communities
+- Share reading lists with community members
+
 ## Project Documentation
 
 - [Settings Page & Literal.club Integration](./SETTINGS.md)
 - [Database Schema](./DATABASE_SCHEMA.md)
 - [Supabase Setup](./SUPABASE_SETUP.md)
+- [Social Authentication Setup](./SOCIAL_AUTH_SETUP.md)
