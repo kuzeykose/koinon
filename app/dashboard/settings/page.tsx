@@ -146,76 +146,29 @@ export default function SettingsPage() {
     const supabase = createClient();
 
     try {
-      // First, save all books to the books table (using isbn13 for conflict resolution)
-      const booksToSave = booksData.map((item) => ({
-        slug: item.book.slug,
+      // Save directly to user_books with all book information
+      const userBooksData = booksData.map((item) => ({
+        user_id: user.id,
+        book_key: null, // Literal.club books don't have Open Library keys
         title: item.book.title,
-        subtitle: item.book.subtitle,
-        description: item.book.description,
-        isbn10: item.book.isbn10,
-        isbn13: item.book.isbn13,
-        language: item.book.language,
-        page_count: item.book.pageCount,
-        published_date: item.book.publishedDate,
-        publisher: item.book.publisher,
         cover: item.book.cover,
         authors: item.book.authors ? JSON.stringify(item.book.authors) : null,
+        published_date: item.book.publishedDate,
+        page_count: item.book.pageCount,
+        language: item.book.language,
+        status: item.readingState.status,
+        progress: item.readingProgress?.progress || 0,
+        capacity: item.readingProgress?.capacity || null,
+        unit: item.readingProgress?.unit || "pages",
+        completed: item.readingProgress?.completed || false,
+        created_at: item.readingState.createdAt,
         updated_at: new Date().toISOString(),
       }));
-
-      const { error: booksError } = await supabase
-        .from("books")
-        .upsert(booksToSave, {
-          onConflict: "isbn13",
-        });
-
-      if (booksError) {
-        console.error("Error saving books:", booksError);
-        toast.error("Failed to save books to database");
-        return false;
-      }
-
-      // Fetch the books we just saved to get their UUIDs
-      const isbn13List = booksData
-        .map((item) => item.book.isbn13)
-        .filter(Boolean);
-      const { data: savedBooks, error: fetchBooksError } = await supabase
-        .from("books")
-        .select("id, isbn13")
-        .in("isbn13", isbn13List);
-
-      if (fetchBooksError || !savedBooks) {
-        console.error("Error fetching saved books:", fetchBooksError);
-        toast.error("Failed to fetch saved books");
-        return false;
-      }
-
-      // Create a map from isbn13 to UUID
-      const isbnToUuidMap = new Map(
-        savedBooks.map((book) => [book.isbn13, book.id])
-      );
-
-      // Save to the merged user_books table using the UUID book_id
-      const userBooksData = booksData
-        .filter(
-          (item) => item.book.isbn13 && isbnToUuidMap.has(item.book.isbn13)
-        )
-        .map((item) => ({
-          user_id: user.id,
-          book_id: isbnToUuidMap.get(item.book.isbn13),
-          status: item.readingState.status,
-          progress: item.readingProgress?.progress || 0,
-          capacity: item.readingProgress?.capacity || null,
-          unit: item.readingProgress?.unit || "pages",
-          completed: item.readingProgress?.completed || false,
-          created_at: item.readingState.createdAt,
-          updated_at: new Date().toISOString(),
-        }));
 
       const { error: userBooksError } = await supabase
         .from("user_books")
         .upsert(userBooksData, {
-          onConflict: "user_id,book_id",
+          onConflict: "user_id,book_key",
         });
 
       if (userBooksError) {

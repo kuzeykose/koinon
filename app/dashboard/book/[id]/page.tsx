@@ -111,37 +111,28 @@ export default function BookDetailPage() {
   const handleAddToShelf = async () => {
     if (!bookDetails) return;
 
+    // Use the appropriate key - work key for works, edition key for editions
+    let bookKey: string | undefined;
+
+    if (isWorkView) {
+      bookKey = bookDetails.workKey;
+    } else if (isEditionView) {
+      bookKey = bookDetails.openLibraryKey;
+    }
+
+    const bookData = {
+      bookKey,
+      title: bookDetails.title,
+      authors: bookDetails.authors,
+      cover: bookDetails.cover,
+      published_date: isEditionView ? bookDetails.publishDate : undefined,
+      page_count: isEditionView ? bookDetails.pageCount : undefined,
+      language: isEditionView ? bookDetails.language : undefined,
+      source: bookDetails.source,
+    };
+
     setIsAdding(true);
     try {
-      // Convert details to the format expected by addBookToShelf
-      const bookData = isWork(bookDetails)
-        ? {
-            openLibraryKey: bookDetails.workKey,
-            title: bookDetails.title,
-            subtitle: bookDetails.subtitle,
-            authors: bookDetails.authors,
-            cover: bookDetails.cover,
-            description: bookDetails.description,
-            subjects: bookDetails.subjects,
-            isbn13: null,
-            source: bookDetails.source,
-          }
-        : {
-            openLibraryKey: bookDetails.workKey, // Use work key for grouping
-            isbn13: bookDetails.isbn13,
-            isbn10: bookDetails.isbn10,
-            title: bookDetails.title,
-            subtitle: bookDetails.subtitle,
-            authors: bookDetails.authors,
-            cover: bookDetails.cover,
-            published_date: bookDetails.publishDate,
-            publisher: bookDetails.publisher,
-            page_count: bookDetails.pageCount,
-            description: bookDetails.description,
-            subjects: bookDetails.subjects,
-            source: bookDetails.source,
-          };
-
       const result = await addBookToShelf(bookData);
       if (result.error) {
         toast.error(result.error);
@@ -275,7 +266,7 @@ export default function BookDetailPage() {
           </div>
 
           {/* Action Buttons */}
-          {/* <div className="pt-2">
+          <div className="pt-2">
             <Button onClick={handleAddToShelf} disabled={isAdding}>
               {isAdding ? (
                 <>
@@ -289,7 +280,7 @@ export default function BookDetailPage() {
                 </>
               )}
             </Button>
-          </div> */}
+          </div>
         </div>
       </div>
 

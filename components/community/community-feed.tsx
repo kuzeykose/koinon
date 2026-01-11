@@ -60,24 +60,23 @@ export async function CommunityFeed({
     .select("id, full_name, avatar_url")
     .in("id", memberIds);
 
-  // 3. Fetch ALL Reading Activities from user_books (to group by user)
+  // 3. Fetch ALL Reading Activities from user_books
+  // Note: Book data is now stored directly in user_books, no join needed
   const { data: readingData } = await supabase
     .from("user_books")
     .select(
       `
         id,
         user_id,
+        title,
+        cover,
+        authors,
         status,
         progress,
         capacity,
         unit,
-        updated_at,
-        book:books (
-          title,
-          cover,
-          authors
-        )
-      `,
+        updated_at
+      `
     )
     .eq("status", "IS_READING")
     .in("user_id", memberIds)
@@ -90,6 +89,11 @@ export async function CommunityFeed({
   readingData?.forEach((item: any) => {
     const activity: ReadingActivity = {
       ...item,
+      book: {
+        title: item.title,
+        cover: item.cover,
+        authors: item.authors,
+      },
       profile: profilesMap.get(item.user_id),
     };
     const existing = userBooksMap.get(item.user_id) || [];
@@ -187,7 +191,7 @@ export async function CommunityFeed({
                     {pageNum}
                   </PaginationLink>
                 </PaginationItem>
-              ),
+              )
             )}
 
             <PaginationItem>
