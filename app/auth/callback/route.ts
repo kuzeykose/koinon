@@ -8,8 +8,33 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    
+    if (!error && data.user) {
+      // Check if profile exists, if not create one
+      const { data: existingProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", data.user.id)
+        .single();
+
+      if (!existingProfile) {
+        // Extract name from user metadata or email
+        const fullName = data.user.user_metadata?.full_name || 
+                        data.user.user_metadata?.name || 
+                        data.user.email?.split('@')[0] || 
+                        'User';
+        
+        await supabase
+          .from("profiles")
+          .insert({
+            id: data.user.id,
+            full_name: fullName,
+            email: data.user.email,
+            avatar_url: data.user.user_metadata?.avatar_url || null,
+          });
+      }
+      
       return NextResponse.redirect(`${origin}${next}`);
     }
   }
