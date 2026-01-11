@@ -4,13 +4,21 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Search, BookOpen, Loader2, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { BookSearchResult } from "@/lib/actions/book-actions";
 import { cn } from "@/lib/utils";
+
+interface EditionSearchResult {
+  bookKey: string; // Book key from Open Library
+  title: string;
+  authors: { name: string }[];
+  cover?: string | null;
+  firstPublishYear?: number | null;
+  source: "openlibrary";
+}
 
 export function BookSearch() {
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<BookSearchResult[]>([]);
+  const [results, setResults] = useState<EditionSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -30,7 +38,7 @@ export function BookSearch() {
       setIsLoading(true);
       try {
         const response = await fetch(
-          `/api/books/search?q=${encodeURIComponent(query)}`,
+          `/api/works/search?q=${encodeURIComponent(query)}`,
           { signal: controller.signal }
         );
 
@@ -39,6 +47,7 @@ export function BookSearch() {
         }
 
         const data = await response.json();
+        console.log(data);
         setResults(data.results || []);
         setIsOpen((data.results || []).length > 0);
       } catch (error) {
@@ -72,24 +81,14 @@ export function BookSearch() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleViewBook = (book: BookSearchResult) => {
-    console.log("book", JSON.stringify(book, null, 2));
-    // Determine the best identifier for the book
-    // Priority: database ID > ISBN13 > Open Library key
-    let bookIdentifier: string = "";
-    if (book.source === "database") {
-      bookIdentifier = book.id as string;
-    } else if (book.source === "openlibrary") {
-      bookIdentifier = book.openLibraryKey as string;
-    }
-
+  const handleViewEdition = (edition: EditionSearchResult) => {
     // Close the dropdown and clear query
     setQuery("");
     setResults([]);
     setIsOpen(false);
 
-    // Navigate to the book detail page
-    router.push(`/dashboard/book/${encodeURIComponent(bookIdentifier)}`);
+    // Navigate to the edition detail page
+    router.push(`/dashboard/book/${encodeURIComponent(edition.bookKey)}`);
   };
 
   const getAuthors = (authors: { name: string }[]) => {
@@ -118,25 +117,23 @@ export function BookSearch() {
       {/* Dropdown Results */}
       {isOpen && results.length > 0 && (
         <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-[400px] overflow-auto rounded-md border bg-popover p-1 shadow-lg">
-          {results.map((book, index) => {
-            const bookKey =
-              book.isbn13 || book.openLibraryKey || `${book.title}-${index}`;
-            const authors = getAuthors(book.authors);
+          {results.map((edition, index) => {
+            const authors = getAuthors(edition.authors);
 
             return (
               <div
-                key={bookKey}
+                key={edition.bookKey || `${edition.title}-${index}`}
                 className={cn(
                   "flex items-center gap-3 rounded-sm p-2 hover:bg-accent cursor-pointer transition-colors"
                 )}
-                onClick={() => handleViewBook(book)}
+                onClick={() => handleViewEdition(edition)}
               >
                 {/* Book Cover */}
                 <div className="flex-shrink-0 w-10 h-14 bg-muted rounded overflow-hidden">
-                  {book.cover ? (
+                  {edition.cover ? (
                     <img
-                      src={book.cover}
-                      alt={book.title}
+                      src={edition.cover}
+                      alt={edition.title}
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -150,24 +147,21 @@ export function BookSearch() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <h4 className="font-medium text-sm truncate">
-                      {book.title}
+                      {edition.title}
                     </h4>
-                    {book.source === "database" && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex-shrink-0">
-                        In Library
-                      </span>
-                    )}
                   </div>
                   {authors && (
                     <p className="text-xs text-muted-foreground truncate">
                       {authors}
                     </p>
                   )}
-                  {book.published_date && (
-                    <p className="text-xs text-muted-foreground">
-                      {book.published_date}
-                    </p>
-                  )}
+                  <div className="flex items-center gap-2 mt-1">
+                    {edition.firstPublishYear && (
+                      <p className="text-xs text-muted-foreground">
+                        {edition.firstPublishYear}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 {/* View Details Arrow */}

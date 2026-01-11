@@ -13,12 +13,43 @@ import {
   Calendar,
   Building2,
   BookText,
-  BookCopy,
 } from "lucide-react";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { addBookToShelf, BookSearchResult } from "@/lib/actions/book-actions";
+import { addBookToShelf } from "@/lib/actions/book-actions";
 import { toast } from "sonner";
-import type { BookDetails } from "@/app/api/books/[id]/route";
+import { BookEditions } from "@/components/book/book-editions";
+
+interface WorkDetails {
+  workKey: string;
+  title: string;
+  subtitle?: string | null;
+  authors: { name: string }[];
+  cover?: string | null;
+  description?: string | null;
+  subjects?: string[];
+  firstPublishYear?: number | null;
+  source: "openlibrary";
+}
+
+interface BookEditionDetails {
+  isbn13: string | null;
+  isbn10?: string | null;
+  openLibraryKey: string;
+  workKey: string | null;
+  title: string;
+  subtitle?: string | null;
+  authors: { name: string }[];
+  cover?: string | null;
+  publishDate?: string | null;
+  publisher?: string | null;
+  pageCount?: number | null;
+  description?: string | null;
+  subjects?: string[];
+  format?: string | null;
+  language?: string | null;
+  source: "database" | "openlibrary";
+}
+
+type BookDetails = WorkDetails | BookEditionDetails;
 
 const readingStatuses: Record<string, string> = {
   IS_READING: "Reading",
@@ -28,20 +59,32 @@ const readingStatuses: Record<string, string> = {
   WANT_TO_READ: "Want to Read",
 };
 
+function isWork(details: BookDetails): details is WorkDetails {
+  return "workKey" in details && !("openLibraryKey" in details);
+}
+
+function isEdition(details: BookDetails): details is BookEditionDetails {
+  return "openLibraryKey" in details && details.openLibraryKey.includes("M");
+}
+
 export default function BookDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const [book, setBook] = useState<BookDetails | null>(null);
+  const [bookDetails, setBookDetails] = useState<BookDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const bookId = params.id as string;
+  const id = params.id as string;
 
   useEffect(() => {
-    async function fetchBook() {
+    async function fetchDetails() {
       try {
-        const response = await fetch(`/api/books/${bookId}`);
+        // Determine if it's a work key (contains 'W') or edition key (contains 'M')
+        const isWorkKey = id.includes("W");
+        const endpoint = isWorkKey ? `/api/works/${id}` : `/api/books/${id}`;
+
+        const response = await fetch(endpoint);
         if (!response.ok) {
           if (response.status === 404) {
             setError("Book not found");
@@ -51,57 +94,60 @@ export default function BookDetailPage() {
           return;
         }
         const data = await response.json();
-        setBook(data.book);
+        setBookDetails(data.work || data.book);
       } catch (err) {
-        console.error("Error fetching book:", err);
+        console.error("Error fetching book details:", err);
         setError("Failed to load book details");
       } finally {
         setIsLoading(false);
       }
     }
 
-    if (bookId) {
-      fetchBook();
+    if (id) {
+      fetchDetails();
     }
-  }, [bookId]);
+  }, [id]);
 
   const handleAddToShelf = async () => {
-    if (!book) return;
+    if (!bookDetails) return;
 
     setIsAdding(true);
     try {
-      const bookData: BookSearchResult = {
-        id: book.id,
-        isbn13: book.isbn13,
-        isbn10: book.isbn10,
-        openLibraryKey: book.openLibraryKey,
-        title: book.title,
-        subtitle: book.subtitle,
-        authors: book.authors,
-        cover: book.cover,
-        published_date: book.published_date,
-        publisher: book.publisher,
-        page_count: book.page_count,
-        description: book.description,
-        source: book.source,
-      };
+      // Convert details to the format expected by addBookToShelf
+      const bookData = isWork(bookDetails)
+        ? {
+            openLibraryKey: bookDetails.workKey,
+            title: bookDetails.title,
+            subtitle: bookDetails.subtitle,
+            authors: bookDetails.authors,
+            cover: bookDetails.cover,
+            description: bookDetails.description,
+            subjects: bookDetails.subjects,
+            isbn13: null,
+            source: bookDetails.source,
+          }
+        : {
+            openLibraryKey: bookDetails.workKey, // Use work key for grouping
+            isbn13: bookDetails.isbn13,
+            isbn10: bookDetails.isbn10,
+            title: bookDetails.title,
+            subtitle: bookDetails.subtitle,
+            authors: bookDetails.authors,
+            cover: bookDetails.cover,
+            published_date: bookDetails.publishDate,
+            publisher: bookDetails.publisher,
+            page_count: bookDetails.pageCount,
+            description: bookDetails.description,
+            subjects: bookDetails.subjects,
+            source: bookDetails.source,
+          };
 
       const result = await addBookToShelf(bookData);
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success(`"${book.title}" added to your shelf!`);
-        // Refresh to show updated state
+        toast.success(`"${bookDetails.title}" added to your shelf!`);
         router.refresh();
-        // Update local state to reflect the change
-        setBook((prev) =>
-          prev
-            ? {
-                ...prev,
-                userBook: { status: "IS_READING", progress: 0 },
-              }
-            : null
-        );
       }
     } catch (err) {
       toast.error("Failed to add book to shelf");
@@ -111,8 +157,8 @@ export default function BookDetailPage() {
   };
 
   const getAuthors = () => {
-    if (!book?.authors || book.authors.length === 0) return null;
-    return book.authors.map((a) => a.name).join(", ");
+    if (!bookDetails?.authors || bookDetails.authors.length === 0) return null;
+    return bookDetails.authors.map((a) => a.name).join(", ");
   };
 
   if (isLoading) {
@@ -123,7 +169,7 @@ export default function BookDetailPage() {
     );
   }
 
-  if (error || !book) {
+  if (error || !bookDetails) {
     return (
       <div className="space-y-4">
         <Button variant="ghost" size="sm" onClick={() => router.back()}>
@@ -139,7 +185,8 @@ export default function BookDetailPage() {
   }
 
   const authors = getAuthors();
-  const isInShelf = !!book.userBook;
+  const isWorkView = isWork(bookDetails);
+  const isEditionView = isEdition(bookDetails);
 
   return (
     <div className="space-y-6">
@@ -154,10 +201,10 @@ export default function BookDetailPage() {
         {/* Cover */}
         <div className="flex-shrink-0">
           <div className="w-40 h-56 bg-muted rounded-lg overflow-hidden shadow-md mx-auto md:mx-0">
-            {book.cover ? (
+            {bookDetails.cover ? (
               <img
-                src={book.cover}
-                alt={book.title}
+                src={bookDetails.cover}
+                alt={bookDetails.title}
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -171,10 +218,10 @@ export default function BookDetailPage() {
         {/* Book Info */}
         <div className="flex-1 space-y-4">
           <div>
-            <h1 className="text-2xl font-bold">{book.title}</h1>
-            {book.subtitle && (
+            <h1 className="text-2xl font-bold">{bookDetails.title}</h1>
+            {bookDetails.subtitle && (
               <p className="text-lg text-muted-foreground mt-1">
-                {book.subtitle}
+                {bookDetails.subtitle}
               </p>
             )}
             {authors && (
@@ -184,22 +231,28 @@ export default function BookDetailPage() {
 
           {/* Metadata */}
           <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-            {book.published_date && (
+            {isWorkView && bookDetails.firstPublishYear && (
               <div className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
-                <span>{book.published_date}</span>
+                <span>First published {bookDetails.firstPublishYear}</span>
               </div>
             )}
-            {book.publisher && (
+            {isEditionView && bookDetails.publishDate && (
+              <div className="flex items-center gap-1">
+                <Calendar className="h-4 w-4" />
+                <span>{bookDetails.publishDate}</span>
+              </div>
+            )}
+            {isEditionView && bookDetails.publisher && (
               <div className="flex items-center gap-1">
                 <Building2 className="h-4 w-4" />
-                <span>{book.publisher}</span>
+                <span>{bookDetails.publisher}</span>
               </div>
             )}
-            {book.page_count && (
+            {isEditionView && bookDetails.pageCount && (
               <div className="flex items-center gap-1">
                 <BookText className="h-4 w-4" />
-                <span>{book.page_count} pages</span>
+                <span>{bookDetails.pageCount} pages</span>
               </div>
             )}
           </div>
@@ -207,132 +260,64 @@ export default function BookDetailPage() {
           {/* Source Badge */}
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-xs">
-              {book.source === "database" ? "In Library" : "Open Library"}
+              {isWorkView ? "Open Library Work" : "Edition"}
             </Badge>
-            {book.isbn13 && (
+            {isEditionView && bookDetails.isbn13 && (
               <Badge variant="secondary" className="text-xs">
-                ISBN: {book.isbn13}
+                ISBN: {bookDetails.isbn13}
+              </Badge>
+            )}
+            {isEditionView && bookDetails.format && (
+              <Badge variant="secondary" className="text-xs">
+                {bookDetails.format}
               </Badge>
             )}
           </div>
 
           {/* Action Buttons */}
           <div className="pt-2">
-            {isInShelf ? (
-              <div className="flex items-center gap-2">
-                <Button disabled variant="secondary">
-                  <Check className="h-4 w-4 mr-2" />
-                  In Your Shelf
-                </Button>
-                {book.userBook?.status && (
-                  <Badge>
-                    {readingStatuses[book.userBook.status] ||
-                      book.userBook.status}
-                  </Badge>
-                )}
-              </div>
-            ) : (
-              <Button onClick={handleAddToShelf} disabled={isAdding}>
-                {isAdding ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Adding...
-                  </>
-                ) : (
-                  <>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add to Shelf
-                  </>
-                )}
-              </Button>
-            )}
+            <Button onClick={handleAddToShelf} disabled={isAdding}>
+              {isAdding ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Adding...
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add to Shelf
+                </>
+              )}
+            </Button>
           </div>
         </div>
       </div>
 
       {/* Description */}
-      {book.description && (
+      {bookDetails.description && (
         <div className="space-y-2">
           <h2 className="text-lg font-semibold">Description</h2>
           <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
-            {book.description}
+            {bookDetails.description}
           </p>
         </div>
       )}
 
-      {/* Editions */}
-      {book.editions && book.editions.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <BookCopy className="h-5 w-5" />
-            <h2 className="text-lg font-semibold">
-              Editions ({book.editions.length})
-            </h2>
-          </div>
-          <ScrollArea className="w-full whitespace-nowrap">
-            <div className="flex gap-4 pb-4">
-              {book.editions.map((edition, index) => (
-                <div
-                  key={edition.key || index}
-                  className="flex-shrink-0 w-36 space-y-2"
-                >
-                  {/* Edition Cover */}
-                  <div className="w-full h-48 bg-muted rounded-md overflow-hidden">
-                    {edition.cover ? (
-                      <img
-                        src={edition.cover}
-                        alt={edition.title}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <BookOpen className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Edition Info */}
-                  <div className="space-y-1">
-                    {edition.format && (
-                      <Badge variant="outline" className="text-[10px]">
-                        {edition.format}
-                      </Badge>
-                    )}
-                    {edition.publisher && (
-                      <p className="text-xs text-muted-foreground truncate">
-                        {edition.publisher}
-                      </p>
-                    )}
-                    {edition.publish_date && (
-                      <p className="text-xs text-muted-foreground">
-                        {edition.publish_date}
-                      </p>
-                    )}
-                    {edition.page_count && (
-                      <p className="text-xs text-muted-foreground">
-                        {edition.page_count} pages
-                      </p>
-                    )}
-                    {edition.language && (
-                      <Badge variant="secondary" className="text-[10px]">
-                        {edition.language.toUpperCase()}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
-        </div>
+      {/* Editions - Show for works or if edition has a work key */}
+      {(isWorkView || (isEditionView && bookDetails.workKey)) && (
+        <BookEditions
+          workKey={
+            isWorkView ? bookDetails.workKey : bookDetails.workKey || undefined
+          }
+        />
       )}
 
       {/* Subjects/Categories */}
-      {book.subjects && book.subjects.length > 0 && (
+      {bookDetails.subjects && bookDetails.subjects.length > 0 && (
         <div className="space-y-2">
           <h2 className="text-lg font-semibold">Subjects</h2>
           <div className="flex flex-wrap gap-2">
-            {book.subjects.map((subject, index) => (
+            {bookDetails.subjects.map((subject, index) => (
               <Badge key={index} variant="secondary">
                 {subject}
               </Badge>
