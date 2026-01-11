@@ -275,7 +275,7 @@ export default function BookDetailPage() {
           </div>
 
           {/* Action Buttons */}
-          <div className="pt-2">
+          {/* <div className="pt-2">
             <Button onClick={handleAddToShelf} disabled={isAdding}>
               {isAdding ? (
                 <>
@@ -289,7 +289,7 @@ export default function BookDetailPage() {
                 </>
               )}
             </Button>
-          </div>
+          </div> */}
         </div>
       </div>
 
