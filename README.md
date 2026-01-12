@@ -1,59 +1,90 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Koinon
 
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+A book management and community platform built with Next.js and Supabase.
 
 ## Features
 
-### Authentication
-
-- **Email/Password Authentication**: Traditional signup with email and password
-- **Display Name**: Users can set their display name during signup
-- **Social Authentication**: Sign in with Google or Microsoft
-- **Profile Management**: Automatic profile creation for all authentication methods
-
 ### Book Management
 
-- Search and add books from Open Library
-- Track reading status and progress
+- Search and discover books from Open Library
+- Track your reading status and progress
+- Manage your personal bookshelf
+
+### Communities
+
 - Create and join book communities
-- Share reading lists with community members
+- Share reading lists with other members
+- Follow community activity and discussions
 
-## Project Documentation
+### User Accounts
 
-- [Settings Page](./SETTINGS.md)
-- [Database Schema](./DATABASE_SCHEMA.md)
-- [Supabase Setup](./SUPABASE_SETUP.md)
-- [Social Authentication Setup](./SOCIAL_AUTH_SETUP.md)
+- Sign up with email or social providers (Google, Microsoft)
+- Manage your profile and preferences
+- Secure authentication
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- pnpm (or npm/yarn)
+- Supabase account
+
+### Installation
+
+1. Clone the repository and install dependencies:
+
+```bash
+git clone <repository-url>
+cd koinon
+pnpm install
+```
+
+2. Set up environment variables in `.env.local`:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+3. Set up your database using the migrations in the `migrations/` folder
+
+4. Run the development server:
+
+```bash
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) to view the application.
+
+## Project Structure
+
+```
+koinon/
+├── app/                 # Next.js App Router
+├── components/          # React components
+├── lib/                 # Utilities and configurations
+├── migrations/          # Database migrations
+├── docs/                # Documentation
+└── types/               # TypeScript types
+```
+
+## Documentation
+
+- [Supabase Setup](./docs/SUPABASE_SETUP.md) - Initial setup and configuration
+- [Social Authentication](./docs/SOCIAL_AUTH_SETUP.md) - Google and Microsoft OAuth setup
+- [Database Schema](./docs/DATABASE_SCHEMA.md) - Database structure and relationships
+- [API Structure](./docs/API_STRUCTURE.md) - API endpoints and data flow
+- [Migration Guide](./docs/MIGRATION_GUIDE.md) - Database migration instructions
+
+## Tech Stack
+
+- Next.js 14
+- TypeScript
+- Supabase
+- Tailwind CSS
+- Open Library API
+
+## License
+
+MIT License
