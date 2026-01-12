@@ -266,8 +266,17 @@ export function BookCard({ userBook }: BookCardProps) {
               <div className="flex flex-wrap gap-2 items-center">
                 <Input
                   type="number"
-                  value={progress}
-                  onChange={(e) => setProgress(Number(e.target.value))}
+                  value={progress || ""}
+                  onChange={(e) => {
+                    const value =
+                      e.target.value === "" ? 0 : Number(e.target.value);
+                    // Don't allow progress to exceed capacity
+                    if (capacity > 0 && value > capacity) {
+                      setProgress(capacity);
+                    } else {
+                      setProgress(value);
+                    }
+                  }}
                   min={0}
                   max={capacity || undefined}
                   className="w-24"
@@ -275,8 +284,16 @@ export function BookCard({ userBook }: BookCardProps) {
                 <span className="text-muted-foreground">/</span>
                 <Input
                   type="number"
-                  value={capacity}
-                  onChange={(e) => setCapacity(Number(e.target.value))}
+                  value={capacity || ""}
+                  onChange={(e) => {
+                    const value =
+                      e.target.value === "" ? 0 : Number(e.target.value);
+                    setCapacity(value);
+                    // If new capacity is less than current progress, adjust progress
+                    if (value > 0 && progress > value) {
+                      setProgress(value);
+                    }
+                  }}
                   min={0}
                   className="w-24"
                   placeholder="Total"
