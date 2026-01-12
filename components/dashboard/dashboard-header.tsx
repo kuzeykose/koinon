@@ -64,6 +64,9 @@ export function DashboardHeader({
             <BookOpen className="h-6 w-6 text-foreground" />
             <span className="text-xl font-bold text-foreground hidden sm:inline">
               Koinon
+              <span className="ml-2 text-xs font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded align-middle">
+                beta
+              </span>
             </span>
           </Link>
 
