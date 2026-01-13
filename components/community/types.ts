@@ -27,6 +27,7 @@ export interface ReadingActivity {
   unit: string | null;
   completed: boolean;
   book: {
+    book_key: string;
     title: string;
     cover: string | null;
     authors: any;

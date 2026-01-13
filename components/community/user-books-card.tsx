@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, MoreHorizontal, ChevronUp } from "lucide-react";
 import { Profile, ReadingActivity } from "./types";
+import { useRouter } from "next/navigation";
 
 const BOOKS_TO_SHOW = 3;
 
@@ -30,9 +31,9 @@ export function UserBooksCard({
   totalBooks,
 }: UserBooksCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-
   const visibleBooks = isExpanded ? books : books.slice(0, BOOKS_TO_SHOW);
   const hasMore = totalBooks > BOOKS_TO_SHOW;
+  const router = useRouter();
 
   return (
     <Card key={user_id} className="overflow-hidden">
@@ -56,8 +57,11 @@ export function UserBooksCard({
       <CardContent className="space-y-3 pb-4">
         {visibleBooks.map((activity) => (
           <div
+            onClick={() => {
+              router.push(`/dashboard/book/${activity.book.book_key}`);
+            }}
             key={activity.id}
-            className="flex items-center gap-3 p-3 rounded-lg bg-muted/50"
+            className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 cursor-pointer hover:bg-muted/70 transition-colors"
           >
             {/* Book Cover */}
             <div className="flex-shrink-0 w-10 h-14 bg-muted rounded overflow-hidden">

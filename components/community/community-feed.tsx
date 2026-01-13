@@ -75,7 +75,8 @@ export async function CommunityFeed({
         progress,
         capacity,
         unit,
-        updated_at
+        updated_at,
+        book_key
       `
     )
     .eq("status", "IS_READING")
@@ -93,6 +94,7 @@ export async function CommunityFeed({
         title: item.title,
         cover: item.cover,
         authors: item.authors,
+        book_key: item.book_key,
       },
       profile: profilesMap.get(item.user_id),
     };
