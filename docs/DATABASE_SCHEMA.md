@@ -85,6 +85,17 @@ CREATE POLICY "Community members can view each other's user_books"
       AND cm_target.status = 'accepted'
     )
   );
+
+-- Policy to allow viewing user_books of users with public profiles
+CREATE POLICY "Public profiles books are viewable by authenticated users"
+  ON user_books FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.id = user_books.user_id
+      AND profiles.is_public = true
+    )
+  );
 ```
 
 ### 2. communities table
@@ -210,6 +221,7 @@ CREATE TABLE profiles (
   full_name TEXT,
   avatar_url TEXT,
   email TEXT, -- Optional: synced from auth.users for display ease, but keep in mind privacy
+  is_public BOOLEAN DEFAULT false, -- Controls whether user's shelf is publicly viewable
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -273,9 +285,10 @@ CREATE TRIGGER on_auth_user_created
 - **user_books**: Each user's book is stored with complete book information. Books from Open Library are identified by `work_key` (for works) or `edition_key` (for specific editions).
 - **Status values**: `WANT_TO_READ`, `IS_READING`, `COMPLETED`, `PAUSED`, `ABANDONED`
 - **Unit values**: Typically `pages`, `chapters`, or `%`
-- **Profiles**: Added to allow displaying user names/avatars in communities.
+- **Profiles**: Added to allow displaying user names/avatars in communities. The `is_public` field controls whether a user's shelf is publicly viewable.
+- **Privacy Settings**: When `is_public` is true, any authenticated user can view that user's books. When false, only the user themselves and their community members can view their books.
 - The `user_id` field in user_books links to the authenticated user in Supabase
-- RLS (Row Level Security) policies ensure users can only access their own reading data
+- RLS (Row Level Security) policies ensure users can only access their own reading data, unless they've made their profile public or are in the same community
 - The unique constraints prevent duplicate entries for the same book per user
 - Foreign key constraints ensure data integrity between tables
 - Authors and subjects are stored as JSONB for flexibility

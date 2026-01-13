@@ -9,11 +9,12 @@ type Category = "all" | "want-to-read" | "currently-reading" | "read";
 
 interface ShelfViewProps {
   books: UserBook[];
+  readOnly?: boolean;
 }
 
 const ITEMS_PER_PAGE = 10;
 
-export function ShelfView({ books }: ShelfViewProps) {
+export function ShelfView({ books, readOnly = false }: ShelfViewProps) {
   const [activeCategory, setActiveCategory] = useState<Category>("all");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -107,7 +108,7 @@ export function ShelfView({ books }: ShelfViewProps) {
         {paginatedBooks.length > 0 ? (
           paginatedBooks.map((userBook) => (
             <div key={userBook.id} className="py-3 first:pt-0 last:pb-0">
-              <BookCard userBook={userBook} />
+              <BookCard userBook={userBook} readOnly={readOnly} />
             </div>
           ))
         ) : (

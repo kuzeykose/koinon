@@ -77,9 +77,10 @@ export interface UserBook {
 
 interface BookCardProps {
   userBook: UserBook;
+  readOnly?: boolean;
 }
 
-export function BookCard({ userBook }: BookCardProps) {
+export function BookCard({ userBook, readOnly = false }: BookCardProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -226,160 +227,177 @@ export function BookCard({ userBook }: BookCardProps) {
         </div>
       </div>
 
-      <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="flex-shrink-0 h-8 w-8">
-            <MoreVertical className="h-4 w-4" />
-          </Button>
-        </SheetTrigger>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Update Reading Progress</SheetTitle>
-            <SheetDescription>
-              Update your reading status and progress for &quot;{userBook.title}
-              &quot;
-            </SheetDescription>
-          </SheetHeader>
-
-          <div className="space-y-4 px-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Status</label>
-              <Select
-                value={status}
-                onValueChange={(value) => setStatus(value as ReadingStatus)}
+      {!readOnly && (
+        <>
+          <Sheet open={isOpen} onOpenChange={setIsOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="flex-shrink-0 h-8 w-8"
               >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="WANT_TO_READ">Want to Read</SelectItem>
-                  <SelectItem value="IS_READING">Reading</SelectItem>
-                  <SelectItem value="COMPLETED">Completed</SelectItem>
-                  <SelectItem value="PAUSED">Paused</SelectItem>
-                  <SelectItem value="ABANDONED">Abandoned</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Update Reading Progress</SheetTitle>
+                <SheetDescription>
+                  Update your reading status and progress for &quot;
+                  {userBook.title}
+                  &quot;
+                </SheetDescription>
+              </SheetHeader>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Progress</label>
-              <div className="flex flex-wrap gap-2 items-center">
-                <Input
-                  type="number"
-                  value={progress || ""}
-                  onChange={(e) => {
-                    const value =
-                      e.target.value === "" ? 0 : Number(e.target.value);
-                    // Don't allow progress to exceed capacity
-                    if (capacity > 0 && value > capacity) {
-                      setProgress(capacity);
-                    } else {
-                      setProgress(value);
-                    }
-                  }}
-                  min={0}
-                  max={capacity || undefined}
-                  className="w-24"
-                />
-                <span className="text-muted-foreground">/</span>
-                <Input
-                  type="number"
-                  value={capacity || ""}
-                  onChange={(e) => {
-                    const value =
-                      e.target.value === "" ? 0 : Number(e.target.value);
-                    setCapacity(value);
-                    // If new capacity is less than current progress, adjust progress
-                    if (value > 0 && progress > value) {
-                      setProgress(value);
-                    }
-                  }}
-                  min={0}
-                  className="w-24"
-                  placeholder="Total"
-                />
-                <Select value={unit} onValueChange={setUnit}>
-                  <SelectTrigger className="w-28">
-                    <SelectValue placeholder="Unit" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pages">pages</SelectItem>
-                    <SelectItem value="chapters">chapters</SelectItem>
-                    <SelectItem value="%">%</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {capacity > 0 && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  Progress: {Math.round((progress / capacity) * 100)}%
-                </label>
-                <div className="w-full bg-muted rounded-full h-2">
-                  <div
-                    className="bg-emerald-500 h-2 rounded-full transition-all"
-                    style={{
-                      width: `${Math.min((progress / capacity) * 100, 100)}%`,
-                    }}
-                  />
+              <div className="space-y-4 px-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Status</label>
+                  <Select
+                    value={status}
+                    onValueChange={(value) => setStatus(value as ReadingStatus)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="WANT_TO_READ">Want to Read</SelectItem>
+                      <SelectItem value="IS_READING">Reading</SelectItem>
+                      <SelectItem value="COMPLETED">Completed</SelectItem>
+                      <SelectItem value="PAUSED">Paused</SelectItem>
+                      <SelectItem value="ABANDONED">Abandoned</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Progress</label>
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <Input
+                      type="number"
+                      value={progress || ""}
+                      onChange={(e) => {
+                        const value =
+                          e.target.value === "" ? 0 : Number(e.target.value);
+                        // Don't allow progress to exceed capacity
+                        if (capacity > 0 && value > capacity) {
+                          setProgress(capacity);
+                        } else {
+                          setProgress(value);
+                        }
+                      }}
+                      min={0}
+                      max={capacity || undefined}
+                      className="w-24"
+                    />
+                    <span className="text-muted-foreground">/</span>
+                    <Input
+                      type="number"
+                      value={capacity || ""}
+                      onChange={(e) => {
+                        const value =
+                          e.target.value === "" ? 0 : Number(e.target.value);
+                        setCapacity(value);
+                        // If new capacity is less than current progress, adjust progress
+                        if (value > 0 && progress > value) {
+                          setProgress(value);
+                        }
+                      }}
+                      min={0}
+                      className="w-24"
+                      placeholder="Total"
+                    />
+                    <Select value={unit} onValueChange={setUnit}>
+                      <SelectTrigger className="w-28">
+                        <SelectValue placeholder="Unit" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pages">pages</SelectItem>
+                        <SelectItem value="chapters">chapters</SelectItem>
+                        <SelectItem value="%">%</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {capacity > 0 && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Progress: {Math.round((progress / capacity) * 100)}%
+                    </label>
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div
+                        className="bg-emerald-500 h-2 rounded-full transition-all"
+                        style={{
+                          width: `${Math.min(
+                            (progress / capacity) * 100,
+                            100
+                          )}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          <SheetFooter className="flex-col gap-3 sm:flex-col">
-            <div className="flex gap-2 w-full">
-              <Button
-                variant="outline"
-                onClick={() => setIsOpen(false)}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSave}
-                disabled={isLoading}
-                className="flex-1"
-              >
-                {isLoading ? "Saving..." : "Save Changes"}
-              </Button>
-            </div>
-            <Button
-              variant="destructive"
-              onClick={() => setShowDeleteDialog(true)}
-              disabled={isLoading || isDeleting}
-              className="w-full"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Remove from Shelf
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+              <SheetFooter className="flex-col gap-3 sm:flex-col">
+                <div className="flex gap-2 w-full">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsOpen(false)}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleSave}
+                    disabled={isLoading}
+                    className="flex-1"
+                  >
+                    {isLoading ? "Saving..." : "Save Changes"}
+                  </Button>
+                </div>
+                <Button
+                  variant="destructive"
+                  onClick={() => setShowDeleteDialog(true)}
+                  disabled={isLoading || isDeleting}
+                  className="w-full"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Remove from Shelf
+                </Button>
+              </SheetFooter>
+            </SheetContent>
+          </Sheet>
 
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove book from shelf?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to remove &quot;{userBook.title}&quot; from
-              your shelf? This action cannot be undone and will delete all
-              progress data.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isDeleting ? "Removing..." : "Remove"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+          <AlertDialog
+            open={showDeleteDialog}
+            onOpenChange={setShowDeleteDialog}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Remove book from shelf?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to remove &quot;{userBook.title}&quot;
+                  from your shelf? This action cannot be undone and will delete
+                  all progress data.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={isDeleting}>
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  {isDeleting ? "Removing..." : "Remove"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </>
+      )}
     </div>
   );
 }

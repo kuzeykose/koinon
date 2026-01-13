@@ -36,9 +36,12 @@ export function UserBooksCard({
   const router = useRouter();
 
   return (
-    <Card key={user_id} className="overflow-hidden">
+    <Card key={user_id} className="overflow-hidden p-4">
       {/* User Header */}
-      <CardHeader className="flex flex-row items-center gap-4 pb-4">
+      <CardHeader
+        className="flex flex-row items-center p-4 gap-4 cursor-pointer hover:bg-muted/50 transition-colors rounded-xl"
+        onClick={() => router.push(`/dashboard/profile/${user_id}`)}
+      >
         <Avatar>
           <AvatarImage src={profile?.avatar_url || ""} />
           <AvatarFallback>{profile?.full_name?.[0] || "U"}</AvatarFallback>
@@ -54,7 +57,7 @@ export function UserBooksCard({
       </CardHeader>
 
       {/* Books List */}
-      <CardContent className="space-y-3 pb-4">
+      <CardContent className="px-4 space-y-3 pb-4">
         {visibleBooks.map((activity) => (
           <div
             onClick={() => {
