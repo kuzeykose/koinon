@@ -30,6 +30,7 @@ export interface ReadingActivity {
   completed: boolean;
   book: {
     book_key: string;
+    isbn13?: string | null; // ISBN-13 for source-agnostic identification
     title: string;
     cover: string | null;
     authors: any;

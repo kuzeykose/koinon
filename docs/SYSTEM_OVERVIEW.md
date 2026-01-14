@@ -35,6 +35,7 @@ This is the central table. It stores both the book metadata _and_ the user's int
 | `id`         | UUID/TEXT   | Primary Key.                                                                      |
 | `user_id`    | UUID        | FK to `auth.users`. Owner of this entry.                                          |
 | `book_key`   | TEXT        | Open Library identifier (e.g., `OL123W` or `OL456M`).                             |
+| `isbn13`     | TEXT        | ISBN-13 for source-agnostic identification (portable across data sources).        |
 | `title`      | TEXT        | Book title.                                                                       |
 | `authors`    | JSONB       | Array of authors, e.g., `[{"name": "J.K. Rowling"}]`.                             |
 | `cover`      | TEXT        | URL to the book cover.                                                            |
@@ -105,6 +106,7 @@ Row Level Security is strictly enforced:
 
 - **Bottleneck**: Search relies entirely on Open Library's API availability and rate limits.
 - **Risk**: If Open Library goes down or changes their API, our search breaks.
+- **Mitigation (Implemented)**: The `isbn13` column provides source-agnostic book identification. Books with ISBNs can be matched against alternative data sources (Google Books, LibraryThing, etc.) without losing user data. Duplicate detection now checks both `book_key` and `isbn13`.
 - **Mitigation (Future)**: We might need a local cache of popular search results or a dedicated `books` table for cached metadata if we move away from the purely denormalized model.
 
 ### Scalability of `user_books`
