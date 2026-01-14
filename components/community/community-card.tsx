@@ -14,6 +14,7 @@ import { formatDistanceToNow } from "date-fns";
 interface Community {
   id: string;
   name: string;
+  slug: string | null;
   description: string | null;
   created_at: string;
   member_count?: number;
@@ -25,8 +26,13 @@ interface CommunityCardProps {
 }
 
 export function CommunityCard({ community }: CommunityCardProps) {
+  // Prefer slug for user-friendly URLs, fallback to id
+  const communityUrl = `/dashboard/communities/${
+    community.slug || community.id
+  }`;
+
   return (
-    <Link href={`/dashboard/communities/${community.id}`}>
+    <Link href={communityUrl}>
       <Card className="h-full hover:bg-muted/50 transition-colors cursor-pointer border-border">
         <CardHeader>
           <div className="flex justify-between items-start">

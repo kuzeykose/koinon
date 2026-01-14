@@ -6,6 +6,7 @@ import { Users } from "lucide-react";
 interface Community {
   id: string;
   name: string;
+  slug: string | null;
   description: string | null;
   created_at: string;
   created_by: string;

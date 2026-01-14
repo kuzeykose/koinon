@@ -54,10 +54,10 @@ export async function CommunityFeed({
     );
   }
 
-  // 2. Fetch Profiles
+  // 2. Fetch Profiles (including username for URL generation)
   const { data: profiles } = await supabase
     .from("profiles")
-    .select("id, full_name, avatar_url")
+    .select("id, full_name, avatar_url, username")
     .in("id", memberIds);
 
   // 3. Fetch ALL Reading Activities from user_books

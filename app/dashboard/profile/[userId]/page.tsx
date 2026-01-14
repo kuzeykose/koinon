@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Lock, BookOpen, BookMarked, CheckCircle2 } from "lucide-react";
 import { notFound } from "next/navigation";
+import { isUUID } from "@/lib/utils";
 
 export default async function UserProfilePage({
   params,
@@ -19,19 +20,36 @@ export default async function UserProfilePage({
     data: { user: currentUser },
   } = await supabase.auth.getUser();
 
-  // Fetch target user's profile
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("id, full_name, avatar_url, is_public")
-    .eq("id", userId)
-    .single();
+  // Fetch target user's profile - support both UUID and username
+  let profile;
+  let profileError;
+
+  if (isUUID(userId)) {
+    // Lookup by UUID
+    const result = await supabase
+      .from("profiles")
+      .select("id, full_name, avatar_url, is_public, username")
+      .eq("id", userId)
+      .single();
+    profile = result.data;
+    profileError = result.error;
+  } else {
+    // Lookup by username
+    const result = await supabase
+      .from("profiles")
+      .select("id, full_name, avatar_url, is_public, username")
+      .eq("username", userId)
+      .single();
+    profile = result.data;
+    profileError = result.error;
+  }
 
   if (profileError || !profile) {
     notFound();
   }
 
   // Check if the profile is the current user's own profile
-  const isOwnProfile = currentUser?.id === userId;
+  const isOwnProfile = currentUser?.id === profile.id;
 
   // Check if profile is public or if it's the user's own profile
   const canViewShelf = profile.is_public || isOwnProfile;
@@ -49,7 +67,7 @@ export default async function UserProfilePage({
     const { data: books } = await supabase
       .from("user_books")
       .select("*")
-      .eq("user_id", userId)
+      .eq("user_id", profile.id)
       .order("updated_at", { ascending: false });
 
     userBooks = books || [];
@@ -63,6 +81,11 @@ export default async function UserProfilePage({
     ).length;
   }
 
+  // Display name: prefer full_name, fallback to username
+  const displayName = profile.full_name || profile.username || "Unknown User";
+  const avatarInitial =
+    profile.full_name?.[0] || profile.username?.[0]?.toUpperCase() || "U";
+
   return (
     <div className="min-h-screen bg-background">
       <main>
@@ -72,18 +95,23 @@ export default async function UserProfilePage({
             <Avatar className="h-20 w-20">
               <AvatarImage src={profile.avatar_url || ""} />
               <AvatarFallback className="text-2xl">
-                {profile.full_name?.[0] || "U"}
+                {avatarInitial}
               </AvatarFallback>
             </Avatar>
             <div>
               <h1 className="text-3xl font-bold text-foreground">
-                {profile.full_name || "Unknown User"}
+                {displayName}
                 {isOwnProfile && (
                   <span className="text-lg text-muted-foreground ml-2">
                     (You)
                   </span>
                 )}
               </h1>
+              {profile.username && profile.full_name && (
+                <p className="text-sm text-muted-foreground font-mono">
+                  @{profile.username}
+                </p>
+              )}
               <p className="text-muted-foreground">
                 {profile.is_public ? "Public Profile" : "Private Profile"}
               </p>
@@ -152,7 +180,7 @@ export default async function UserProfilePage({
         {canViewShelf ? (
           <div>
             <h2 className="text-2xl font-bold mb-4">
-              {isOwnProfile ? "Your Shelf" : `${profile.full_name}'s Shelf`}
+              {isOwnProfile ? "Your Shelf" : `${displayName}'s Shelf`}
             </h2>
             <ShelfView books={userBooks || []} readOnly={!isOwnProfile} />
           </div>
@@ -163,8 +191,8 @@ export default async function UserProfilePage({
               This shelf is private
             </AlertTitle>
             <AlertDescription className="text-base">
-              {profile.full_name || "This user"} has not made their book shelf
-              public. Only they can view their books and reading progress.
+              {displayName} has not made their book shelf public. Only they can
+              view their books and reading progress.
             </AlertDescription>
           </Alert>
         )}

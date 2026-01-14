@@ -15,10 +15,12 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Users, ArrowLeft } from "lucide-react";
+import { isUUID } from "@/lib/utils";
 
 interface Community {
   id: string;
   name: string;
+  slug: string | null;
   description: string | null;
   member_count?: number;
 }
@@ -40,28 +42,45 @@ export default function JoinCommunityPage({
   useEffect(() => {
     const fetchCommunity = async () => {
       try {
-        // Fetch community details
-        const { data: communityData, error: communityError } = await supabase
-          .from("communities")
-          .select("*")
-          .eq("id", id)
-          .single();
+        // Fetch community details - support both UUID and slug
+        let communityData;
+        let communityError;
+
+        if (isUUID(id)) {
+          const result = await supabase
+            .from("communities")
+            .select("*")
+            .eq("id", id)
+            .single();
+          communityData = result.data;
+          communityError = result.error;
+        } else {
+          const result = await supabase
+            .from("communities")
+            .select("*")
+            .eq("slug", id)
+            .single();
+          communityData = result.data;
+          communityError = result.error;
+        }
 
         if (communityError) throw communityError;
 
-        // Check if already a member
-        if (user) {
+        // Check if already a member (use actual community.id for DB operations)
+        if (user && communityData) {
           const { data: memberData } = await supabase
             .from("community_members")
             .select("id")
-            .eq("community_id", id)
+            .eq("community_id", communityData.id)
             .eq("user_id", user.id)
             .maybeSingle();
 
           if (memberData) {
-            // Already a member, redirect
+            // Already a member, redirect using slug if available
             toast.info("You are already a member of this community");
-            router.push(`/dashboard/communities/${id}`);
+            router.push(
+              `/dashboard/communities/${communityData.slug || communityData.id}`
+            );
             return;
           }
         }
@@ -79,19 +98,16 @@ export default function JoinCommunityPage({
   }, [id, user, router, supabase]);
 
   const handleJoin = async () => {
-    if (!user) {
+    if (!user || !community) {
       toast.error("Please log in to join the community");
-      // Redirect to login? Or show login modal?
-      // For now, assume user is logged in because this is under dashboard (protected)
-      // But if the link is shared publicly, they might need to login.
-      // The dashboard layout might force login.
       return;
     }
 
     setIsJoining(true);
     try {
+      // Use actual community.id for database operations
       const { error } = await supabase.from("community_members").insert({
-        community_id: id,
+        community_id: community.id,
         user_id: user.id,
         role: "member",
         status: "accepted",
@@ -99,8 +115,9 @@ export default function JoinCommunityPage({
 
       if (error) throw error;
 
-      toast.success(`Welcome to ${community?.name}!`);
-      router.push(`/dashboard/communities/${id}`);
+      toast.success(`Welcome to ${community.name}!`);
+      // Redirect using slug if available
+      router.push(`/dashboard/communities/${community.slug || community.id}`);
     } catch (error) {
       console.error("Error joining community:", error);
       toast.error("Failed to join community. Please try again.");

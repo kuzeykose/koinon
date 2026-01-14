@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -17,6 +17,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -25,20 +26,27 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Plus, Check, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
+import { generateSlug, validateSlug } from "@/lib/utils";
 
 const formSchema = z.object({
   name: z.string().min(2, {
     message: "Community name must be at least 2 characters.",
+  }),
+  slug: z.string().min(2, {
+    message: "URL slug must be at least 2 characters.",
   }),
   description: z.string().optional(),
 });
 
 export function CreateCommunityDialog() {
   const [open, setOpen] = useState(false);
+  const [isCheckingSlug, setIsCheckingSlug] = useState(false);
+  const [isSlugAvailable, setIsSlugAvailable] = useState<boolean | null>(null);
+  const [slugError, setSlugError] = useState<string | null>(null);
   const { user } = useAuth();
   const router = useRouter();
   const supabase = createClient();
@@ -47,9 +55,71 @@ export function CreateCommunityDialog() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
+      slug: "",
       description: "",
     },
   });
+
+  const watchName = form.watch("name");
+  const watchSlug = form.watch("slug");
+
+  // Auto-generate slug from name
+  useEffect(() => {
+    if (watchName && !form.getFieldState("slug").isDirty) {
+      const generatedSlug = generateSlug(watchName);
+      form.setValue("slug", generatedSlug);
+    }
+  }, [watchName, form]);
+
+  // Check slug availability
+  const checkSlugAvailability = useCallback(
+    async (slug: string) => {
+      if (!slug) {
+        setIsSlugAvailable(null);
+        return;
+      }
+
+      const validation = validateSlug(slug);
+      if (!validation.valid) {
+        setSlugError(validation.error || null);
+        setIsSlugAvailable(null);
+        return;
+      }
+
+      setSlugError(null);
+      setIsCheckingSlug(true);
+
+      const { data } = await supabase
+        .from("communities")
+        .select("id")
+        .eq("slug", slug)
+        .maybeSingle();
+
+      setIsCheckingSlug(false);
+      setIsSlugAvailable(!data);
+      if (data) {
+        setSlugError("This URL is already taken");
+      }
+    },
+    [supabase]
+  );
+
+  // Debounce slug check
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (watchSlug) {
+        checkSlugAvailability(watchSlug);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [watchSlug, checkSlugAvailability]);
+
+  // Handle slug input change
+  const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "");
+    form.setValue("slug", value, { shouldDirty: true });
+  };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
@@ -57,12 +127,18 @@ export function CreateCommunityDialog() {
       return;
     }
 
+    if (!isSlugAvailable) {
+      toast.error("Please choose a different URL slug");
+      return;
+    }
+
     try {
-      // 1. Create the community
+      // 1. Create the community with slug
       const { data: community, error: communityError } = await supabase
         .from("communities")
         .insert({
           name: values.name,
+          slug: values.slug,
           description: values.description,
           created_by: user.id,
         })
@@ -82,8 +158,6 @@ export function CreateCommunityDialog() {
         });
 
       if (memberError) {
-        // Rollback community creation if member creation fails (optional but good practice)
-        // For now, just log it, as RLS policies might prevent deletion of the community if not careful
         console.error("Error adding member:", memberError);
         throw memberError;
       }
@@ -91,17 +165,29 @@ export function CreateCommunityDialog() {
       toast.success("Community created successfully!");
       setOpen(false);
       form.reset();
+      setIsSlugAvailable(null);
+      setSlugError(null);
       router.refresh();
-      // Navigate to the new community
-      router.push(`/dashboard/communities/${community.id}`);
+      // Navigate to the new community using slug
+      router.push(`/dashboard/communities/${community.slug}`);
     } catch (error) {
       console.error("Error creating community:", error);
       toast.error("Failed to create community. Please try again.");
     }
   }
 
+  // Reset form state when dialog closes
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      form.reset();
+      setIsSlugAvailable(null);
+      setSlugError(null);
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
@@ -132,6 +218,46 @@ export function CreateCommunityDialog() {
             />
             <FormField
               control={form.control}
+              name="slug"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>URL Slug</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input
+                        placeholder="book-club-2024"
+                        {...field}
+                        onChange={handleSlugChange}
+                        className={
+                          slugError
+                            ? "border-destructive pr-10"
+                            : isSlugAvailable
+                            ? "border-green-500 pr-10"
+                            : ""
+                        }
+                      />
+                      {isCheckingSlug && (
+                        <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                      )}
+                      {!isCheckingSlug && isSlugAvailable && (
+                        <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
+                      )}
+                    </div>
+                  </FormControl>
+                  {slugError ? (
+                    <p className="text-sm text-destructive">{slugError}</p>
+                  ) : (
+                    <FormDescription>
+                      Your community URL will be: /communities/
+                      {watchSlug || "..."}
+                    </FormDescription>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name="description"
               render={({ field }) => (
                 <FormItem>
@@ -148,7 +274,10 @@ export function CreateCommunityDialog() {
               )}
             />
             <DialogFooter>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
+              <Button
+                type="submit"
+                disabled={form.formState.isSubmitting || !isSlugAvailable}
+              >
                 {form.formState.isSubmitting ? "Creating..." : "Create"}
               </Button>
             </DialogFooter>

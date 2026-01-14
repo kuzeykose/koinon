@@ -35,21 +35,35 @@ export function UserBooksCard({
   const hasMore = totalBooks > BOOKS_TO_SHOW;
   const router = useRouter();
 
+  // Prefer username for user-friendly URLs, fallback to user_id
+  const profileUrl = profile?.username
+    ? `/dashboard/profile/${profile.username}`
+    : `/dashboard/profile/${user_id}`;
+
+  // Display name: prefer full_name, fallback to username
+  const displayName =
+    profile?.full_name || profile?.username || "Unknown Member";
+  const avatarInitial =
+    profile?.full_name?.[0] || profile?.username?.[0]?.toUpperCase() || "U";
+
   return (
     <Card key={user_id} className="overflow-hidden p-4">
       {/* User Header */}
       <CardHeader
         className="flex flex-row items-center p-4 gap-4 cursor-pointer hover:bg-muted/50 transition-colors rounded-xl"
-        onClick={() => router.push(`/dashboard/profile/${user_id}`)}
+        onClick={() => router.push(profileUrl)}
       >
         <Avatar>
           <AvatarImage src={profile?.avatar_url || ""} />
-          <AvatarFallback>{profile?.full_name?.[0] || "U"}</AvatarFallback>
+          <AvatarFallback>{avatarInitial}</AvatarFallback>
         </Avatar>
         <div className="flex flex-col">
-          <span className="font-semibold text-sm">
-            {profile?.full_name || "Unknown Member"}
-          </span>
+          <span className="font-semibold text-sm">{displayName}</span>
+          {profile?.username && profile?.full_name && (
+            <span className="text-xs text-muted-foreground font-mono">
+              @{profile.username}
+            </span>
+          )}
           <span className="text-xs text-muted-foreground">
             {totalBooks} {totalBooks === 1 ? "book" : "books"}
           </span>

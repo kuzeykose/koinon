@@ -18,21 +18,25 @@ import { toast } from "sonner";
 
 interface InviteDialogProps {
   communityId: string;
+  communitySlug?: string | null;
   communityName: string;
 }
 
 export function InviteDialog({
   communityId,
+  communitySlug,
   communityName,
 }: InviteDialogProps) {
   const [copied, setCopied] = useState(false);
   const [inviteLink, setInviteLink] = useState("");
 
   useEffect(() => {
+    // Prefer slug for user-friendly URLs, fallback to ID
+    const identifier = communitySlug || communityId;
     setInviteLink(
-      `${window.location.origin}/dashboard/communities/${communityId}/join`
+      `${window.location.origin}/dashboard/communities/${identifier}/join`
     );
-  }, [communityId]);
+  }, [communityId, communitySlug]);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(inviteLink);

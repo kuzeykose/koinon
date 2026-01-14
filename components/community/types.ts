@@ -1,6 +1,7 @@
 export interface Community {
   id: string;
   name: string;
+  slug: string | null;
   description: string | null;
   created_at: string;
   created_by: string;
@@ -10,6 +11,7 @@ export interface Profile {
   id: string;
   full_name: string | null;
   avatar_url: string | null;
+  username: string | null;
 }
 
 export interface Member {
