@@ -153,6 +153,8 @@ export default function BookDetailPage() {
         // Add new book to shelf
         const bookData = {
           bookKey,
+          isbn13: isEditionView ? bookDetails.isbn13 : undefined,
+          isbn10: isEditionView ? bookDetails.isbn10 : undefined,
           title: bookDetails.title,
           authors: bookDetails.authors,
           cover: bookDetails.cover,
@@ -321,6 +323,18 @@ export default function BookDetailPage() {
               <div className="flex items-center gap-1">
                 <BookText className="h-4 w-4" />
                 <span>{bookDetails.pageCount} pages</span>
+              </div>
+            )}
+            {isEditionView && bookDetails.isbn13 && (
+              <div className="flex items-center gap-1">
+                <BookOpen className="h-4 w-4" />
+                <span>ISBN-13: {bookDetails.isbn13}</span>
+              </div>
+            )}
+            {isEditionView && bookDetails.isbn10 && !bookDetails.isbn13 && (
+              <div className="flex items-center gap-1">
+                <BookOpen className="h-4 w-4" />
+                <span>ISBN-10: {bookDetails.isbn10}</span>
               </div>
             )}
           </div>

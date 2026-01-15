@@ -15,6 +15,9 @@ CREATE TABLE user_books (
   -- Book identifier (Open Library key)
   book_key TEXT, -- Can be work key (OL123W) or edition key (OL123M)
 
+  -- Source-agnostic identifier
+  isbn13 TEXT, -- ISBN-13 for portable identification across data sources
+
   -- Book metadata
   title TEXT NOT NULL,
   cover TEXT,
@@ -45,12 +48,18 @@ CREATE TABLE user_books (
 CREATE INDEX idx_user_books_user_id ON user_books(user_id);
 CREATE INDEX idx_user_books_status ON user_books(status);
 CREATE INDEX idx_user_books_book_key ON user_books(book_key);
+CREATE INDEX idx_user_books_isbn13 ON user_books(isbn13);
 CREATE INDEX idx_user_books_title ON user_books(title);
 
 -- Unique constraint to prevent duplicate books per user
 CREATE UNIQUE INDEX user_books_user_book_key_unique
   ON user_books(user_id, book_key)
   WHERE book_key IS NOT NULL;
+
+-- Unique constraint for ISBN-13 per user (prevents same ISBN being added twice)
+CREATE UNIQUE INDEX user_books_user_isbn13_unique
+  ON user_books(user_id, isbn13)
+  WHERE isbn13 IS NOT NULL;
 
 -- Enable RLS
 ALTER TABLE user_books ENABLE ROW LEVEL SECURITY;
@@ -282,7 +291,7 @@ CREATE TRIGGER on_auth_user_created
 
 ## Notes
 
-- **user_books**: Each user's book is stored with complete book information. Books from Open Library are identified by `work_key` (for works) or `edition_key` (for specific editions).
+- **user_books**: Each user's book is stored with complete book information. Books from Open Library are identified by `book_key` (work or edition key). Additionally, `isbn13` provides a source-agnostic identifier that enables portability across different data sources.
 - **Status values**: `WANT_TO_READ`, `IS_READING`, `COMPLETED`, `PAUSED`, `ABANDONED`
 - **Unit values**: Typically `pages`, `chapters`, or `%`
 - **Profiles**: Added to allow displaying user names/avatars in communities. The `is_public` field controls whether a user's shelf is publicly viewable.

@@ -51,6 +51,8 @@ export interface UserBook {
 
   // Book identifier
   book_key?: string | null;
+  isbn13?: string | null; // ISBN-13 for source-agnostic identification
+  isbn10?: string | null; // ISBN-10 for older books
 
   // Book metadata
   title: string;
