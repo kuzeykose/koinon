@@ -222,8 +222,15 @@ CREATE TABLE profiles (
   avatar_url TEXT,
   email TEXT, -- Optional: synced from auth.users for display ease, but keep in mind privacy
   is_public BOOLEAN DEFAULT false, -- Controls whether user's shelf is publicly viewable
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  -- Presence tracking
+  last_seen TIMESTAMPTZ, -- Last activity timestamp (updated every ~30 seconds)
+  status TEXT DEFAULT 'offline' -- Current status: 'online', 'reading', 'offline'
 );
+
+-- Indexes for presence queries
+CREATE INDEX idx_profiles_last_seen ON profiles(last_seen);
+CREATE INDEX idx_profiles_status ON profiles(status);
 
 -- Enable RLS
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
@@ -279,6 +286,26 @@ CREATE TRIGGER on_auth_user_created
 3. Run each CREATE TABLE statement
 4. Run the index creation statements
 5. Run the RLS policies
+
+## Recent Migrations
+
+### Migration 012: User Presence Tracking
+
+Adds online status tracking to profiles. Run this migration to enable the online status feature:
+
+```sql
+-- File: migrations/012_add_user_presence.sql
+
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS last_seen TIMESTAMPTZ;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'offline';
+CREATE INDEX IF NOT EXISTS idx_profiles_last_seen ON profiles(last_seen);
+CREATE INDEX IF NOT EXISTS idx_profiles_status ON profiles(status);
+```
+
+**Status values:**
+- `online`: User is active on the site
+- `reading`: User has an active pomodoro timer (future feature)
+- `offline`: User is inactive or manually set themselves invisible
 
 ## Notes
 

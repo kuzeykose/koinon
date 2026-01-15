@@ -1,7 +1,16 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { BookOpen, Library, Users, Moon, Sun, Monitor } from "lucide-react";
+import {
+  BookOpen,
+  Library,
+  Users,
+  Moon,
+  Sun,
+  Monitor,
+  Circle,
+  CircleOff,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
 import { createClient } from "@/lib/supabase/client";
@@ -17,6 +26,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { BookSearch } from "@/components/shelf/book-search";
+import { usePresence } from "@/contexts/presence-context";
+import { useAuth } from "@/contexts/auth-context";
 
 interface DashboardHeaderProps {
   userEmail: string | undefined;
@@ -36,6 +47,19 @@ export function DashboardHeader({
   const pathname = usePathname();
   const supabase = createClient();
   const { theme, setTheme } = useTheme();
+  const { user } = useAuth();
+  const { getUserStatus, setStatus } = usePresence();
+
+  const currentStatus = user ? getUserStatus(user.id) : "offline";
+  const isOnline = currentStatus !== "offline";
+
+  const handleStatusToggle = async () => {
+    const newStatus = isOnline ? "offline" : "online";
+    await setStatus(newStatus);
+    toast.success(
+      newStatus === "online" ? "You are now visible" : "You are now invisible"
+    );
+  };
 
   const handleSignOut = async () => {
     try {
@@ -137,6 +161,40 @@ export function DashboardHeader({
                         )}
                       >
                         <Moon className="h-2.5 w-2.5" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between px-2 py-1.5">
+                    <span className="text-sm">Status</span>
+                    <div className="flex items-center rounded-md border bg-muted p-0.5">
+                      <button
+                        onClick={handleStatusToggle}
+                        className={cn(
+                          "rounded-sm p-1.5 transition-colors",
+                          isOnline
+                            ? "bg-background shadow-sm"
+                            : "hover:bg-background/50"
+                        )}
+                        title="Online"
+                      >
+                        <Circle
+                          className={cn(
+                            "h-2.5 w-2.5",
+                            isOnline && "fill-green-500 text-green-500"
+                          )}
+                        />
+                      </button>
+                      <button
+                        onClick={handleStatusToggle}
+                        className={cn(
+                          "rounded-sm p-1.5 transition-colors",
+                          !isOnline
+                            ? "bg-background shadow-sm"
+                            : "hover:bg-background/50"
+                        )}
+                        title="Offline"
+                      >
+                        <CircleOff className="h-2.5 w-2.5" />
                       </button>
                     </div>
                   </div>

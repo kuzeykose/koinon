@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { ShelfView } from "@/components/shelf/shelf-view";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ProfileAvatar } from "@/components/profile/profile-avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Lock, BookOpen, BookMarked, CheckCircle2 } from "lucide-react";
@@ -92,12 +92,12 @@ export default async function UserProfilePage({
         {/* Profile Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-6">
-            <Avatar className="h-20 w-20">
-              <AvatarImage src={profile.avatar_url || ""} />
-              <AvatarFallback className="text-2xl">
-                {avatarInitial}
-              </AvatarFallback>
-            </Avatar>
+            <ProfileAvatar
+              userId={profile.id}
+              src={profile.avatar_url || ""}
+              fallback={avatarInitial}
+              className="h-20 w-20 text-2xl"
+            />
             <div>
               <h1 className="text-3xl font-bold text-foreground">
                 {displayName}
