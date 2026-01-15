@@ -22,8 +22,9 @@ export interface BookSearchResult {
   // Book identifier (Open Library key - can be work or edition)
   bookKey?: string | null; // e.g., OL123W (work) or OL123M (edition)
 
-  // Source-agnostic identifier
+  // Source-agnostic identifiers
   isbn13?: string | null; // ISBN-13 for portable identification across data sources
+  isbn10?: string | null; // ISBN-10 for books that only have ISBN-10
 
   // Book metadata
   title: string;
@@ -52,7 +53,7 @@ export async function addBookToShelf(
     return { error: "Unauthorized" };
   }
 
-  // Check if user already has this book by book_key or isbn13
+  // Check if user already has this book by book_key, isbn13, or isbn10
   let existingUserBook = null;
 
   // First check by book_key (Open Library key)
@@ -66,13 +67,24 @@ export async function addBookToShelf(
     existingUserBook = data;
   }
 
-  // If not found by book_key, check by isbn13 (source-agnostic)
+  // If not found by book_key, check by isbn13
   if (!existingUserBook && book.isbn13) {
     const { data } = await supabase
       .from("user_books")
       .select("id")
       .eq("user_id", user.id)
       .eq("isbn13", book.isbn13)
+      .maybeSingle();
+    existingUserBook = data;
+  }
+
+  // If still not found, check by isbn10
+  if (!existingUserBook && book.isbn10) {
+    const { data } = await supabase
+      .from("user_books")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("isbn10", book.isbn10)
       .maybeSingle();
     existingUserBook = data;
   }
@@ -88,6 +100,7 @@ export async function addBookToShelf(
       user_id: user.id,
       book_key: book.bookKey,
       isbn13: book.isbn13,
+      isbn10: book.isbn10,
       title: book.title,
       cover: book.cover,
       authors: JSON.stringify(book.authors),
