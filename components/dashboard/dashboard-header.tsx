@@ -1,7 +1,15 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { BookOpen, Library, Users, Moon, Sun, Monitor } from "lucide-react";
+import {
+  BookOpen,
+  Library,
+  Users,
+  Moon,
+  Sun,
+  Monitor,
+  BarChart3,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
 import { createClient } from "@/lib/supabase/client";
@@ -25,6 +33,7 @@ interface DashboardHeaderProps {
 
 const navItems = [
   { href: "/dashboard/shelf", label: "Shelf", icon: Library },
+  { href: "/dashboard/statistics", label: "Statistics", icon: BarChart3 },
   { href: "/dashboard/communities", label: "Communities", icon: Users },
 ];
 

@@ -222,6 +222,7 @@ CREATE TABLE profiles (
   avatar_url TEXT,
   email TEXT, -- Optional: synced from auth.users for display ease, but keep in mind privacy
   is_public BOOLEAN DEFAULT false, -- Controls whether user's shelf is publicly viewable
+  is_stats_public BOOLEAN DEFAULT false, -- Controls whether user's reading statistics are publicly viewable
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -304,10 +305,73 @@ Books are fetched from Open Library. Key endpoints:
 - Cover: `https://covers.openlibrary.org/b/id/{cover_id}-{size}.jpg` (sizes: S, M, L)
 - Author: `https://openlibrary.org/authors/{author_id}.json`
 
+### 6. reading_progress_history table
+
+This table stores snapshots of reading progress to enable statistics tracking and visualization.
+
+```sql
+CREATE TABLE reading_progress_history (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_book_id UUID NOT NULL REFERENCES user_books(id) ON DELETE CASCADE,
+
+  -- Snapshot of progress at this point in time
+  progress INTEGER NOT NULL,
+  capacity INTEGER,
+  status TEXT NOT NULL,
+
+  -- Calculated field: pages read in this session (delta from previous)
+  pages_read INTEGER DEFAULT 0,
+
+  recorded_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Indexes for efficient querying
+CREATE INDEX idx_progress_history_user_id ON reading_progress_history(user_id);
+CREATE INDEX idx_progress_history_user_book_id ON reading_progress_history(user_book_id);
+CREATE INDEX idx_progress_history_recorded_at ON reading_progress_history(recorded_at);
+
+-- Enable RLS
+ALTER TABLE reading_progress_history ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Users can view their own progress history
+CREATE POLICY "Users can view their own progress history"
+  ON reading_progress_history FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- Policy: Users can insert their own progress history
+CREATE POLICY "Users can insert their own progress history"
+  ON reading_progress_history FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- Policy: Users can view other users' stats if they made them public
+CREATE POLICY "Public stats are viewable"
+  ON reading_progress_history FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE profiles.id = reading_progress_history.user_id
+      AND profiles.is_stats_public = true
+    )
+  );
+```
+
 ## Data Flow
 
 1. User searches for books via Open Library API
 2. User adds a book to their shelf
 3. Book data is saved directly to the `user_books` table with all book information
 4. User can update their progress and status over time
-5. Each user has their own copy of the book data in their user_books entries
+5. Each progress update logs a snapshot to `reading_progress_history` for statistics
+6. Each user has their own copy of the book data in their user_books entries
+
+## Privacy Model
+
+Users have granular control over their privacy settings:
+
+| `is_public` | `is_stats_public` | Others can see shelf | Others can see stats |
+| ----------- | ----------------- | -------------------- | -------------------- |
+| false       | false             | No                   | No                   |
+| true        | false             | Yes                  | No                   |
+| false       | true              | No                   | Yes                  |
+| true        | true              | Yes                  | Yes                  |

@@ -107,6 +107,14 @@ export async function updateUserBook(input: UpdateUserBookInput) {
 
   const { id, status, progress, capacity, unit } = input;
 
+  // Fetch current state to calculate progress delta
+  const { data: currentBook } = await supabase
+    .from("user_books")
+    .select("progress, capacity, status")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .single();
+
   const updateData: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
   };
@@ -145,7 +153,27 @@ export async function updateUserBook(input: UpdateUserBookInput) {
     return { error: error.message };
   }
 
+  // Log progress history for statistics tracking
+  const newProgress = progress ?? currentBook?.progress ?? 0;
+  const newCapacity = capacity ?? currentBook?.capacity;
+  const newStatus = status ?? currentBook?.status ?? "WANT_TO_READ";
+  const previousProgress = currentBook?.progress ?? 0;
+  const pagesRead = Math.max(0, newProgress - previousProgress);
+
+  // Only log if there's actual progress change or status change
+  if (pagesRead > 0 || status !== undefined) {
+    await supabase.from("reading_progress_history").insert({
+      user_id: user.id,
+      user_book_id: id,
+      progress: newProgress,
+      capacity: newCapacity,
+      status: newStatus,
+      pages_read: pagesRead,
+    });
+  }
+
   revalidatePath("/dashboard/shelf");
+  revalidatePath("/dashboard/statistics");
   return { success: true };
 }
 
