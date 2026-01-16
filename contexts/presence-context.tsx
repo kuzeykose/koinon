@@ -42,6 +42,7 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const supabase = createClient();
   const currentStatusRef = useRef<UserStatus>("online");
+  const [hasLoadedStatus, setHasLoadedStatus] = useState(false);
 
   // Update current user's presence (heartbeat)
   // Skip heartbeat if user manually set themselves to offline
@@ -60,6 +61,51 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("Failed to update presence:", error);
     }
+  }, [user, supabase]);
+
+  // Hydrate current status from persisted profile before heartbeat starts
+  useEffect(() => {
+    let isActive = true;
+
+    const loadCurrentStatus = async () => {
+      if (!user) {
+        if (isActive) {
+          currentStatusRef.current = "online";
+          setHasLoadedStatus(true);
+        }
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("status")
+          .eq("id", user.id)
+          .single();
+
+        if (error) {
+          console.error("Failed to load current status:", error);
+          return;
+        }
+
+        if (data?.status && isActive) {
+          currentStatusRef.current = data.status as UserStatus;
+        }
+      } catch (error) {
+        console.error("Failed to load current status:", error);
+      } finally {
+        if (isActive) {
+          setHasLoadedStatus(true);
+        }
+      }
+    };
+
+    setHasLoadedStatus(false);
+    loadCurrentStatus();
+
+    return () => {
+      isActive = false;
+    };
   }, [user, supabase]);
 
   // Fetch all online users
@@ -151,6 +197,9 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
       return;
     }
+    if (!hasLoadedStatus) {
+      return;
+    }
 
     // Initial presence update and fetch
     updatePresence();
@@ -165,11 +214,11 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
       clearInterval(heartbeatInterval);
       clearInterval(fetchInterval);
     };
-  }, [user, updatePresence, fetchOnlineUsers]);
+  }, [user, hasLoadedStatus, updatePresence, fetchOnlineUsers]);
 
   // Handle page visibility changes
   useEffect(() => {
-    if (!user) return;
+    if (!user || !hasLoadedStatus) return;
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
