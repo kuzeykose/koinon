@@ -41,21 +41,23 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
   );
   const [isLoading, setIsLoading] = useState(true);
   const supabase = createClient();
-  const currentStatusRef = useRef<UserStatus>("online");
+  const currentStatusRef = useRef<UserStatus | null>(null);
   const [hasLoadedStatus, setHasLoadedStatus] = useState(false);
 
   // Update current user's presence (heartbeat)
   // Skip heartbeat if user manually set themselves to offline
   const updatePresence = useCallback(async () => {
     if (!user) return;
-    if (currentStatusRef.current === "offline") return; // Don't update if manually offline
+    const currentStatus = currentStatusRef.current;
+    if (!currentStatus) return;
+    if (currentStatus === "offline") return; // Don't update if manually offline
 
     try {
       await supabase
         .from("profiles")
         .update({
           last_seen: new Date().toISOString(),
-          status: currentStatusRef.current,
+          status: currentStatus,
         })
         .eq("id", user.id);
     } catch (error) {
@@ -70,13 +72,14 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
     const loadCurrentStatus = async () => {
       if (!user) {
         if (isActive) {
-          currentStatusRef.current = "online";
+          currentStatusRef.current = null;
           setHasLoadedStatus(true);
         }
         return;
       }
 
       try {
+        currentStatusRef.current = null;
         const { data, error } = await supabase
           .from("profiles")
           .select("status")
@@ -88,8 +91,17 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        if (data?.status && isActive) {
-          currentStatusRef.current = data.status as UserStatus;
+        if (isActive) {
+          const persistedStatus = data?.status as UserStatus | null;
+          if (
+            persistedStatus === "online" ||
+            persistedStatus === "reading" ||
+            persistedStatus === "offline"
+          ) {
+            currentStatusRef.current = persistedStatus;
+          } else {
+            currentStatusRef.current = "online";
+          }
         }
       } catch (error) {
         console.error("Failed to load current status:", error);
