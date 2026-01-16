@@ -22,7 +22,7 @@ interface UserPresence {
 type PresenceContextType = {
   onlineUsers: Map<string, UserPresence>;
   getUserStatus: (userId: string) => UserStatus;
-  setStatus: (status: UserStatus) => Promise<void>;
+  setStatus: (status: UserStatus) => Promise<boolean>;
   isLoading: boolean;
 };
 
@@ -173,18 +173,24 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
   // Set current user's status
   const setStatus = useCallback(
     async (status: UserStatus) => {
-      if (!user) return;
-
-      currentStatusRef.current = status;
+      if (!user) return false;
 
       try {
-        await supabase
+        const now = new Date().toISOString();
+        const { error } = await supabase
           .from("profiles")
           .update({
             status,
-            last_seen: new Date().toISOString(),
+            last_seen: now,
           })
           .eq("id", user.id);
+
+        if (error) {
+          console.error("Failed to set status:", error);
+          return false;
+        }
+
+        currentStatusRef.current = status;
 
         // Update local state immediately
         setOnlineUsers((prev) => {
@@ -192,12 +198,14 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
           newMap.set(user.id, {
             userId: user.id,
             status,
-            lastSeen: new Date().toISOString(),
+            lastSeen: now,
           });
           return newMap;
         });
+        return true;
       } catch (error) {
         console.error("Failed to set status:", error);
+        return false;
       }
     },
     [user, supabase]

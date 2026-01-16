@@ -55,10 +55,14 @@ export function DashboardHeader({
 
   const handleStatusToggle = async () => {
     const newStatus = isOnline ? "offline" : "online";
-    await setStatus(newStatus);
-    toast.success(
-      newStatus === "online" ? "You are now visible" : "You are now invisible"
-    );
+    const didUpdate = await setStatus(newStatus);
+    if (didUpdate) {
+      toast.success(
+        newStatus === "online" ? "You are now visible" : "You are now invisible"
+      );
+      return;
+    }
+    toast.error("Failed to update status");
   };
 
   const handleSignOut = async () => {
