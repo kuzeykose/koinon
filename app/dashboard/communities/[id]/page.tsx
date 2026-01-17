@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { InviteDialog } from "@/components/community/invite-dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Calendar } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { CommunityTabs } from "@/components/community/community-tabs";
 import { CommunityFeed } from "@/components/community/community-feed";
 import { CommunityMembers } from "@/components/community/community-members";
 import { CommunityInfo } from "@/components/community/community-info";
@@ -87,25 +87,11 @@ export default async function CommunityPage({
       </div>
 
       {/* Content */}
-      <Tabs defaultValue="feed" className="w-full">
-        <TabsList>
-          <TabsTrigger value="feed">Community Feed</TabsTrigger>
-          <TabsTrigger value="members">Members</TabsTrigger>
-          <TabsTrigger value="information">Information</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="feed" className="mt-6">
-          <CommunityFeed communityId={community.id} page={currentPage} />
-        </TabsContent>
-
-        <TabsContent value="members" className="mt-6">
-          <CommunityMembers communityId={community.id} />
-        </TabsContent>
-
-        <TabsContent value="information" className="mt-6">
-          <CommunityInfo communityId={community.id} />
-        </TabsContent>
-      </Tabs>
+      <CommunityTabs
+        feedContent={<CommunityFeed communityId={community.id} page={currentPage} />}
+        membersContent={<CommunityMembers communityId={community.id} />}
+        informationContent={<CommunityInfo communityId={community.id} />}
+      />
     </div>
   );
 }
