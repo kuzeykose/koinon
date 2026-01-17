@@ -32,7 +32,7 @@ export function CommunityCard({ community }: CommunityCardProps) {
   }`;
 
   return (
-    <Link href={communityUrl}>
+    <Link href={communityUrl} prefetch={false}>
       <Card className="h-full hover:bg-muted/50 transition-colors cursor-pointer border-border">
         <CardHeader>
           <div className="flex justify-between items-start">
