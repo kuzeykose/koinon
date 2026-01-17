@@ -27,6 +27,7 @@ export function MemberCard({ member }: MemberCardProps) {
   return (
     <Link
       href={profileUrl}
+      prefetch={false}
       className="block transition-transform hover:scale-105"
     >
       <Card className="cursor-pointer hover:shadow-md transition-shadow">
