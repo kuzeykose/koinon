@@ -91,6 +91,7 @@ export function DashboardHeader({
         <div className="flex items-center justify-between gap-4 py-4">
           <Link
             href="/dashboard"
+            prefetch={false}
             className="flex items-center space-x-2 flex-shrink-0"
           >
             <BookOpen className="h-6 w-6 text-foreground" />
@@ -223,6 +224,7 @@ export function DashboardHeader({
             const isActive = pathname.startsWith(item.href);
             return (
               <Link
+                prefetch={false}
                 key={item.href}
                 href={item.href}
                 className={cn(
