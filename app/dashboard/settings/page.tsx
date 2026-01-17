@@ -21,6 +21,7 @@ import { Check, Copy, Loader2 } from "lucide-react";
 export default function SettingsPage() {
   const { user } = useAuth();
   const [isPublic, setIsPublic] = useState(false);
+  const [isStatsPublic, setIsStatsPublic] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [username, setUsername] = useState("");
   const [originalUsername, setOriginalUsername] = useState("");
@@ -41,12 +42,13 @@ export default function SettingsPage() {
 
       const { data, error } = await supabase
         .from("profiles")
-        .select("is_public, username")
+        .select("is_public, is_stats_public, username")
         .eq("id", user.id)
         .single();
 
       if (!error && data) {
         setIsPublic(data.is_public || false);
+        setIsStatsPublic(data.is_stats_public || false);
         setUsername(data.username || "");
         setOriginalUsername(data.username || "");
         setUsernameInput(data.username || "");
@@ -135,7 +137,7 @@ export default function SettingsPage() {
     }
   };
 
-  // Handle toggle change
+  // Handle toggle change for public profile
   const handleTogglePublic = async (checked: boolean) => {
     if (!user?.id) return;
 
@@ -153,6 +155,30 @@ export default function SettingsPage() {
     } else {
       toast.success(
         checked ? "Your shelf is now public" : "Your shelf is now private"
+      );
+    }
+  };
+
+  // Handle toggle change for public statistics
+  const handleToggleStatsPublic = async (checked: boolean) => {
+    if (!user?.id) return;
+
+    setIsStatsPublic(checked);
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ is_stats_public: checked })
+      .eq("id", user.id);
+
+    if (error) {
+      console.error("Failed to update profile:", error);
+      setIsStatsPublic(!checked); // Revert on error
+      toast.error("Failed to update privacy settings");
+    } else {
+      toast.success(
+        checked
+          ? "Your statistics are now public"
+          : "Your statistics are now private"
       );
     }
   };
@@ -296,10 +322,10 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle>Privacy Settings</CardTitle>
             <CardDescription>
-              Control who can view your book shelf
+              Control who can view your book shelf and statistics
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="public-profile" className="text-base">
@@ -313,6 +339,22 @@ export default function SettingsPage() {
                 id="public-profile"
                 checked={isPublic}
                 onCheckedChange={handleTogglePublic}
+                disabled={isLoading}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="public-stats" className="text-base">
+                  Public Statistics
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Allow other users to view your reading statistics and streaks
+                </p>
+              </div>
+              <Switch
+                id="public-stats"
+                checked={isStatsPublic}
+                onCheckedChange={handleToggleStatsPublic}
                 disabled={isLoading}
               />
             </div>

@@ -33,21 +33,13 @@ export default function LoginPage() {
     try {
       const supabase = createClient();
 
-      // Get the base URL - prefer environment variable for consistency
-      const baseUrl =
-        process.env.NEXT_PUBLIC_SITE_URL ||
-        (typeof window !== "undefined" ? window.location.origin : "");
-
-      const redirectTo = `${baseUrl}/auth/callback`;
-
-      console.log("OAuth redirect URL:", redirectTo); // Debug log
+      // Use the browser's actual origin for OAuth redirect
+      const redirectTo = `${window.location.origin}/auth/callback`;
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo,
-          // Ensure we skip the browser redirect handling for better control
-          skipBrowserRedirect: false,
         },
       });
 

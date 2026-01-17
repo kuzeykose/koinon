@@ -36,21 +36,13 @@ export default function SignupPage() {
     try {
       const supabase = createClient();
 
-      // Get the base URL - prefer environment variable for consistency
-      const baseUrl =
-        process.env.NEXT_PUBLIC_SITE_URL ||
-        (typeof window !== "undefined" ? window.location.origin : "");
+      // Use the browser's actual origin for OAuth redirect
+      const redirectTo = `${window.location.origin}/auth/callback`;
 
-      const redirectTo = `${baseUrl}/auth/callback`;
-
-      console.log("OAuth redirect URL:", redirectTo); // Debug log
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo,
-          // Ensure we skip the browser redirect handling for better control
-          skipBrowserRedirect: false,
         },
       });
 
@@ -105,24 +97,25 @@ export default function SignupPage() {
     });
 
     if (signUpError) {
+      console.error("Error signing up:", signUpError);
       setError(signUpError.message);
       setLoading(false);
       return;
     }
 
     // Create profile entry
-    if (data.user) {
-      const { error: profileError } = await supabase.from("profiles").insert({
-        id: data.user.id,
-        full_name: displayName,
-        email: email,
-      });
+    // if (data.user) {
+    //   const { error: profileError } = await supabase.from("profiles").insert({
+    //     id: data.user.id,
+    //     full_name: displayName,
+    //     email: email,
+    //   });
 
-      if (profileError) {
-        console.error("Error creating profile:", profileError);
-        // Don't show error to user as signup was successful
-      }
-    }
+    //   if (profileError) {
+    //     console.error("Error creating profile:", profileError);
+    //     // Don't show error to user as signup was successful
+    //   }
+    // }
 
     setSuccess(true);
     setLoading(false);

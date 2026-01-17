@@ -22,6 +22,10 @@ export interface BookSearchResult {
   // Book identifier (Open Library key - can be work or edition)
   bookKey?: string | null; // e.g., OL123W (work) or OL123M (edition)
 
+  // Source-agnostic identifiers
+  isbn13?: string | null; // ISBN-13 for portable identification across data sources
+  isbn10?: string | null; // ISBN-10 for books that only have ISBN-10
+
   // Book metadata
   title: string;
   cover?: string | null;
@@ -49,15 +53,38 @@ export async function addBookToShelf(
     return { error: "Unauthorized" };
   }
 
-  // Check if user already has this book by book_key
+  // Check if user already has this book by book_key, isbn13, or isbn10
   let existingUserBook = null;
 
+  // First check by book_key (Open Library key)
   if (book.bookKey) {
     const { data } = await supabase
       .from("user_books")
       .select("id")
       .eq("user_id", user.id)
       .eq("book_key", book.bookKey)
+      .maybeSingle();
+    existingUserBook = data;
+  }
+
+  // If not found by book_key, check by isbn13
+  if (!existingUserBook && book.isbn13) {
+    const { data } = await supabase
+      .from("user_books")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("isbn13", book.isbn13)
+      .maybeSingle();
+    existingUserBook = data;
+  }
+
+  // If still not found, check by isbn10
+  if (!existingUserBook && book.isbn10) {
+    const { data } = await supabase
+      .from("user_books")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("isbn10", book.isbn10)
       .maybeSingle();
     existingUserBook = data;
   }
@@ -72,6 +99,8 @@ export async function addBookToShelf(
     .insert({
       user_id: user.id,
       book_key: book.bookKey,
+      isbn13: book.isbn13,
+      isbn10: book.isbn10,
       title: book.title,
       cover: book.cover,
       authors: JSON.stringify(book.authors),
@@ -106,6 +135,14 @@ export async function updateUserBook(input: UpdateUserBookInput) {
   }
 
   const { id, status, progress, capacity, unit } = input;
+
+  // Fetch current state to calculate progress delta
+  const { data: currentBook } = await supabase
+    .from("user_books")
+    .select("progress, capacity, status")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .single();
 
   const updateData: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
@@ -145,7 +182,27 @@ export async function updateUserBook(input: UpdateUserBookInput) {
     return { error: error.message };
   }
 
+  // Log progress history for statistics tracking
+  const newProgress = progress ?? currentBook?.progress ?? 0;
+  const newCapacity = capacity ?? currentBook?.capacity;
+  const newStatus = status ?? currentBook?.status ?? "WANT_TO_READ";
+  const previousProgress = currentBook?.progress ?? 0;
+  const pagesRead = Math.max(0, newProgress - previousProgress);
+
+  // Only log if there's actual progress change or status change
+  if (pagesRead > 0 || status !== undefined) {
+    await supabase.from("reading_progress_history").insert({
+      user_id: user.id,
+      user_book_id: id,
+      progress: newProgress,
+      capacity: newCapacity,
+      status: newStatus,
+      pages_read: pagesRead,
+    });
+  }
+
   revalidatePath("/dashboard/shelf");
+  revalidatePath("/dashboard/statistics");
   return { success: true };
 }
 
