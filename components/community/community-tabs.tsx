@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, ReactNode } from "react";
+import { useState, useCallback, ReactNode } from "react";
+import { useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const VALID_TABS = ["feed", "members", "information"] as const;
@@ -18,33 +18,38 @@ export function CommunityTabs({
   membersContent, 
   informationContent 
 }: CommunityTabsProps) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   
-  // Get the current tab from URL, default to "feed"
+  // Get initial tab from URL for refresh persistence
   const tabParam = searchParams.get("tab");
-  const currentTab: TabValue = VALID_TABS.includes(tabParam as TabValue) 
+  const initialTab: TabValue = VALID_TABS.includes(tabParam as TabValue) 
     ? (tabParam as TabValue) 
     : "feed";
 
+  const [currentTab, setCurrentTab] = useState<TabValue>(initialTab);
+
   const handleTabChange = useCallback((value: string) => {
+    const newTab = value as TabValue;
+    setCurrentTab(newTab);
+    
+    // Update URL without triggering navigation (for refresh persistence)
     const params = new URLSearchParams(searchParams.toString());
     
-    if (value === "feed") {
-      // Remove tab param for default tab to keep URL clean
+    if (newTab === "feed") {
       params.delete("tab");
+      params.delete("page");
     } else {
-      params.set("tab", value);
-    }
-    
-    // Preserve page param only for feed tab
-    if (value !== "feed") {
+      params.set("tab", newTab);
       params.delete("page");
     }
     
     const queryString = params.toString();
-    router.push(queryString ? `?${queryString}` : window.location.pathname, { scroll: false });
-  }, [router, searchParams]);
+    const newUrl = queryString 
+      ? `${window.location.pathname}?${queryString}` 
+      : window.location.pathname;
+    
+    window.history.replaceState(null, "", newUrl);
+  }, [searchParams]);
 
   return (
     <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">
