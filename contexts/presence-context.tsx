@@ -256,7 +256,25 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [user, updatePresence, fetchOnlineUsers]);
+  }, [user, hasLoadedStatus, updatePresence, fetchOnlineUsers]);
+
+  // Handle browser/tab close - set status to offline
+  useEffect(() => {
+    if (!user || !hasLoadedStatus) return;
+
+    const handleBeforeUnload = () => {
+      // Only send offline beacon if user was not already manually offline
+      if (currentStatusRef.current === "offline") return;
+
+      // Use sendBeacon for reliable delivery during page unload
+      navigator.sendBeacon("/api/presence/offline");
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [user, hasLoadedStatus]);
 
   return (
     <PresenceContext.Provider
