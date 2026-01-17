@@ -100,7 +100,8 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
           ) {
             currentStatusRef.current = persistedStatus;
           } else {
-            currentStatusRef.current = "online";
+            // Default to offline until user explicitly opts in.
+            currentStatusRef.current = "offline";
           }
         }
       } catch (error) {
@@ -177,15 +178,16 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
 
       try {
         const now = new Date().toISOString();
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from("profiles")
           .update({
             status,
             last_seen: now,
           })
-          .eq("id", user.id);
+          .eq("id", user.id)
+          .select("id");
 
-        if (error) {
+        if (error || !data || data.length === 0) {
           console.error("Failed to set status:", error);
           return false;
         }

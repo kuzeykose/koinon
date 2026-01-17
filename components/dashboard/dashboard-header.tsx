@@ -53,12 +53,14 @@ export function DashboardHeader({
   const currentStatus = user ? getUserStatus(user.id) : "offline";
   const isOnline = currentStatus !== "offline";
 
-  const handleStatusToggle = async () => {
-    const newStatus = isOnline ? "offline" : "online";
-    const didUpdate = await setStatus(newStatus);
+  const handleStatusChange = async (nextStatus: "online" | "offline") => {
+    if (nextStatus === currentStatus) return;
+    const didUpdate = await setStatus(nextStatus);
     if (didUpdate) {
       toast.success(
-        newStatus === "online" ? "You are now visible" : "You are now invisible"
+        nextStatus === "online"
+          ? "You are now visible"
+          : "You are now invisible"
       );
       return;
     }
@@ -172,7 +174,7 @@ export function DashboardHeader({
                     <span className="text-sm">Status</span>
                     <div className="flex items-center rounded-md border bg-muted p-0.5">
                       <button
-                        onClick={handleStatusToggle}
+                        onClick={() => handleStatusChange("online")}
                         className={cn(
                           "rounded-sm p-1.5 transition-colors",
                           isOnline
@@ -189,7 +191,7 @@ export function DashboardHeader({
                         />
                       </button>
                       <button
-                        onClick={handleStatusToggle}
+                        onClick={() => handleStatusChange("offline")}
                         className={cn(
                           "rounded-sm p-1.5 transition-colors",
                           !isOnline
