@@ -51,11 +51,14 @@ This is the central table. It stores both the book metadata _and_ the user's int
 
 Stores user profile information, automatically synced from `auth.users`.
 
-| Column       | Type | Description                      |
-| :----------- | :--- | :------------------------------- |
-| `id`         | UUID | PK, references `auth.users(id)`. |
-| `full_name`  | TEXT | Display name.                    |
-| `avatar_url` | TEXT | Profile picture URL.             |
+| Column       | Type        | Description                                     |
+| :----------- | :---------- | :---------------------------------------------- |
+| `id`         | UUID        | PK, references `auth.users(id)`.                |
+| `full_name`  | TEXT        | Display name.                                   |
+| `avatar_url` | TEXT        | Profile picture URL.                            |
+| `is_public`  | BOOLEAN     | Whether user's shelf is publicly viewable.      |
+| `last_seen`  | TIMESTAMPTZ | Last activity timestamp for presence tracking.  |
+| `status`     | TEXT        | Current status: `online`, `reading`, `offline`. |
 
 - **Automation**: A PostgreSQL trigger `on_auth_user_created` automatically creates a row here when a new user signs up.
 
@@ -94,6 +97,42 @@ Row Level Security is strictly enforced:
 1.  User updates progress via UI.
 2.  `updateUserBook` (Server Action) is called.
 3.  Updates `progress`, `status`, and `completed` boolean in `user_books`.
+
+### Online Presence System
+
+The app tracks user online status using a database polling approach (no WebSocket/Realtime costs).
+
+#### How It Works
+
+1. **Heartbeat**: Every 30 seconds, the client updates `last_seen` timestamp in the `profiles` table.
+2. **Status Query**: Periodically fetches users with `last_seen` within the last 2 minutes.
+3. **Status Display**: Shows colored dot indicators on user avatars:
+   - **Green**: User is online (active within 2 minutes)
+   - **Purple**: User is reading (pomodoro timer active - future feature)
+   - **No indicator**: User is offline
+
+#### Key Components
+
+- `contexts/presence-context.tsx`: React context managing presence state and heartbeat
+- `components/ui/status-avatar.tsx`: Avatar wrapper with status indicator
+- `profiles.last_seen`: Timestamp of last activity
+- `profiles.status`: Current status (`online`, `reading`, `offline`)
+
+#### Manual Status Control
+
+Users can manually set themselves as "invisible" (offline) via the avatar dropdown in the header. When set to offline:
+
+- Heartbeat stops updating `last_seen`
+- User appears offline to other users
+- Status persists until user manually switches back to online
+
+#### Cost Considerations
+
+This approach uses database polling instead of Supabase Realtime, resulting in:
+
+- **$0 additional cost** (no Realtime connection fees)
+- ~30-60 second latency (acceptable for this use case)
+- Minimal database load with indexed queries
 
 ## 4. Challenges & Bottlenecks
 

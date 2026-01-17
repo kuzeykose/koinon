@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { StatusAvatar } from "@/components/ui/status-avatar";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, MoreHorizontal, ChevronUp } from "lucide-react";
 import { Profile, ReadingActivity } from "./types";
@@ -53,10 +53,11 @@ export function UserBooksCard({
         className="flex flex-row items-center p-4 gap-4 cursor-pointer hover:bg-muted/50 transition-colors rounded-xl"
         onClick={() => router.push(profileUrl)}
       >
-        <Avatar>
-          <AvatarImage src={profile?.avatar_url || ""} />
-          <AvatarFallback>{avatarInitial}</AvatarFallback>
-        </Avatar>
+        <StatusAvatar
+          userId={user_id}
+          src={profile?.avatar_url || ""}
+          fallback={avatarInitial}
+        />
         <div className="flex flex-col">
           <span className="font-semibold text-sm">{displayName}</span>
           {profile?.username && profile?.full_name && (
