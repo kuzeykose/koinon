@@ -31,7 +31,6 @@ const PresenceContext = createContext<PresenceContextType | undefined>(
 );
 
 const HEARTBEAT_INTERVAL = 30000; // 30 seconds
-const FETCH_INTERVAL = 60000; // 30 seconds
 const ONLINE_THRESHOLD = 2 * 60 * 1000; // 2 minutes
 const LOCAL_STATUS_KEY = "koinon_presence_status";
 const SESSION_REFRESH_KEY = "koinon_is_refresh";
@@ -162,7 +161,7 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
     };
   }, [user, supabase]);
 
-  // Fetch all online users
+  // Initial fetch of online users (called once on mount)
   const fetchOnlineUsers = useCallback(async () => {
     try {
       const threshold = new Date(Date.now() - ONLINE_THRESHOLD).toISOString();
@@ -263,7 +262,7 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
     [user, supabase]
   );
 
-  // Set up heartbeat and fetch intervals
+  // Set up heartbeat interval and Realtime subscription
   useEffect(() => {
     if (!user) {
       setIsLoading(false);
@@ -277,16 +276,58 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
     updatePresence();
     fetchOnlineUsers();
 
-    // Set up intervals
+    // Set up heartbeat interval (keep updating own presence)
     const heartbeatInterval = setInterval(updatePresence, HEARTBEAT_INTERVAL);
-    const fetchInterval = setInterval(fetchOnlineUsers, FETCH_INTERVAL);
 
-    // Cleanup on unmount - set status to offline
+    // Subscribe to real-time profile changes
+    const channel = supabase
+      .channel("presence-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "profiles",
+        },
+        (payload) => {
+          // Update onlineUsers map with new data
+          const profile = payload.new as {
+            id: string;
+            status: UserStatus;
+            last_seen: string;
+          };
+
+          // Only update if the user is within the online threshold
+          const lastSeenTime = new Date(profile.last_seen).getTime();
+          const isRecent = Date.now() - lastSeenTime < ONLINE_THRESHOLD;
+
+          setOnlineUsers((prev) => {
+            const newMap = new Map(prev);
+            
+            if (isRecent) {
+              // Add or update the user
+              newMap.set(profile.id, {
+                userId: profile.id,
+                status: profile.status,
+                lastSeen: profile.last_seen,
+              });
+            } else {
+              // Remove users that are no longer online
+              newMap.delete(profile.id);
+            }
+            
+            return newMap;
+          });
+        }
+      )
+      .subscribe();
+
+    // Cleanup on unmount
     return () => {
       clearInterval(heartbeatInterval);
-      clearInterval(fetchInterval);
+      supabase.removeChannel(channel);
     };
-  }, [user, hasLoadedStatus, updatePresence, fetchOnlineUsers]);
+  }, [user, hasLoadedStatus, updatePresence, fetchOnlineUsers, supabase]);
 
   // Handle page visibility changes
   useEffect(() => {
@@ -298,7 +339,7 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
         if (currentStatusRef.current !== "offline") {
           updatePresence();
         }
-        fetchOnlineUsers();
+        // No need to fetch users - Realtime subscription handles updates
       }
     };
 
@@ -306,7 +347,7 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [user, hasLoadedStatus, updatePresence, fetchOnlineUsers]);
+  }, [user, hasLoadedStatus, updatePresence]);
 
   // Handle browser/tab close - set status to offline in database
   // Use sessionStorage to detect refresh vs actual close
