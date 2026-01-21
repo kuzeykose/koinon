@@ -108,7 +108,7 @@ The app tracks user online status using a database polling approach (no WebSocke
 2. **Status Query**: Periodically fetches users with `last_seen` within the last 2 minutes.
 3. **Status Display**: Shows colored dot indicators on user avatars:
    - **Green**: User is online (active within 2 minutes)
-   - **Purple**: User is reading (pomodoro timer active - future feature)
+   - **Purple**: User is reading (pomodoro timer active)
    - **No indicator**: User is offline
 
 #### Key Components

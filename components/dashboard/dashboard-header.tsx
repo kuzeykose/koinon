@@ -11,6 +11,7 @@ import {
   Circle,
   CircleOff,
   BarChart3,
+  Timer,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
@@ -37,6 +38,7 @@ interface DashboardHeaderProps {
 
 const navItems = [
   { href: "/dashboard/shelf", label: "Shelf", icon: Library },
+  { href: "/dashboard/pomodoro", label: "Pomodoro", icon: Timer },
   { href: "/dashboard/statistics", label: "Statistics", icon: BarChart3 },
   { href: "/dashboard/communities", label: "Communities", icon: Users },
 ];
