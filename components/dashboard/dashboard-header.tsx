@@ -30,6 +30,7 @@ import {
 import { BookSearch } from "@/components/shelf/book-search";
 import { usePresence } from "@/contexts/presence-context";
 import { useAuth } from "@/contexts/auth-context";
+import { Button } from "../ui/button";
 
 interface DashboardHeaderProps {
   userEmail: string | undefined;
@@ -107,19 +108,17 @@ export function DashboardHeader({
           {/* Book Search and Pomodoro */}
           <div className="flex items-center gap-2">
             <BookSearch />
+
             <Link
               href="/dashboard/pomodoro"
               prefetch={false}
-              className={cn(
-                "flex items-center justify-center h-9 w-9 rounded-md transition-colors",
-                pathname.startsWith("/dashboard/pomodoro")
-                  ? "bg-primary text-primary-foreground"
-                  : "hover:bg-accent hover:text-accent-foreground"
-              )}
               title="Pomodoro Timer"
             >
-              <Timer className="h-5 w-5" />
+              <Button variant="outline" size="icon">
+                <Timer className="h-5 w-5" />
+              </Button>
             </Link>
+
 
             <div className="flex items-center gap-2 flex-shrink-0">
               <DropdownMenu>

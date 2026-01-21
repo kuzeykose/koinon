@@ -193,7 +193,7 @@ export function PomodoroTimer({ books }: PomodoroTimerProps) {
     if (sessionType === "work") {
       showNotification("Work Session Complete!", "Time for a break.");
       toast.success("Work session complete! Time for a break.");
-      
+
       // Revert status to online after work session
       if (previousStatusRef.current) {
         await setStatus(previousStatusRef.current as "online" | "offline");
@@ -246,6 +246,7 @@ export function PomodoroTimer({ books }: PomodoroTimerProps) {
     // Set status to reading for work sessions
     if (sessionType === "work" && user) {
       const currentStatus = getUserStatus(user.id);
+      console.log("currentStatus", currentStatus);
       previousStatusRef.current = currentStatus;
       await setStatus("reading");
     }
@@ -324,7 +325,7 @@ export function PomodoroTimer({ books }: PomodoroTimerProps) {
   const handleSaveSettings = () => {
     setSettings(tempSettings);
     localStorage.setItem(LOCAL_SETTINGS_KEY, JSON.stringify(tempSettings));
-    
+
     // Update time remaining if idle
     if (timerState === "idle") {
       setTimeRemaining(
@@ -333,7 +334,7 @@ export function PomodoroTimer({ books }: PomodoroTimerProps) {
           : tempSettings.breakDuration * 60
       );
     }
-    
+
     setSettingsOpen(false);
     toast.success("Settings saved");
   };
@@ -406,8 +407,8 @@ export function PomodoroTimer({ books }: PomodoroTimerProps) {
                 {timerState === "running"
                   ? "Running"
                   : timerState === "paused"
-                  ? "Paused"
-                  : "Ready"}
+                    ? "Paused"
+                    : "Ready"}
               </span>
             </div>
           </div>
