@@ -38,7 +38,6 @@ interface DashboardHeaderProps {
 
 const navItems = [
   { href: "/dashboard/shelf", label: "Shelf", icon: Library },
-  { href: "/dashboard/pomodoro", label: "Pomodoro", icon: Timer },
   { href: "/dashboard/statistics", label: "Statistics", icon: BarChart3 },
   { href: "/dashboard/communities", label: "Communities", icon: Users },
 ];
@@ -105,9 +104,22 @@ export function DashboardHeader({
             </span>
           </Link>
 
-          {/* Book Search */}
+          {/* Book Search and Pomodoro */}
           <div className="flex items-center gap-2">
             <BookSearch />
+            <Link
+              href="/dashboard/pomodoro"
+              prefetch={false}
+              className={cn(
+                "flex items-center justify-center h-9 w-9 rounded-md transition-colors",
+                pathname.startsWith("/dashboard/pomodoro")
+                  ? "bg-primary text-primary-foreground"
+                  : "hover:bg-accent hover:text-accent-foreground"
+              )}
+              title="Pomodoro Timer"
+            >
+              <Timer className="h-5 w-5" />
+            </Link>
 
             <div className="flex items-center gap-2 flex-shrink-0">
               <DropdownMenu>
