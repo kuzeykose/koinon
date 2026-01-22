@@ -11,6 +11,7 @@ import {
   Circle,
   CircleOff,
   BarChart3,
+  Timer,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
@@ -29,6 +30,7 @@ import {
 import { BookSearch } from "@/components/shelf/book-search";
 import { usePresence } from "@/contexts/presence-context";
 import { useAuth } from "@/contexts/auth-context";
+import { Button } from "../ui/button";
 
 interface DashboardHeaderProps {
   userEmail: string | undefined;
@@ -103,9 +105,20 @@ export function DashboardHeader({
             </span>
           </Link>
 
-          {/* Book Search */}
+          {/* Book Search and Pomodoro */}
           <div className="flex items-center gap-2">
             <BookSearch />
+
+            <Link
+              href="/dashboard/pomodoro"
+              prefetch={false}
+              title="Pomodoro Timer"
+            >
+              <Button variant="outline" size="icon">
+                <Timer className="h-5 w-5" />
+              </Button>
+            </Link>
+
 
             <div className="flex items-center gap-2 flex-shrink-0">
               <DropdownMenu>

@@ -315,7 +315,7 @@ CREATE INDEX IF NOT EXISTS idx_profiles_status ON profiles(status);
 
 **Status values:**
 - `online`: User is active on the site
-- `reading`: User has an active pomodoro timer (future feature)
+- `reading`: User has an active pomodoro timer
 - `offline`: User is inactive or manually set themselves invisible
 
 ## Notes
@@ -392,6 +392,59 @@ CREATE POLICY "Public stats are viewable"
     )
   );
 ```
+
+### 7. pomodoro_sessions table
+
+This table tracks Pomodoro timer sessions for focused reading.
+
+```sql
+CREATE TABLE pomodoro_sessions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_book_id UUID REFERENCES user_books(id) ON DELETE SET NULL,
+  
+  -- Session details
+  started_at TIMESTAMPTZ NOT NULL,
+  ended_at TIMESTAMPTZ,
+  duration_minutes INTEGER NOT NULL, -- Planned duration
+  completed BOOLEAN DEFAULT false,
+  session_type TEXT NOT NULL CHECK (session_type IN ('work', 'break')),
+  
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_pomodoro_sessions_user_id ON pomodoro_sessions(user_id);
+CREATE INDEX idx_pomodoro_sessions_user_book_id ON pomodoro_sessions(user_book_id);
+CREATE INDEX idx_pomodoro_sessions_started_at ON pomodoro_sessions(started_at);
+
+-- Enable RLS
+ALTER TABLE pomodoro_sessions ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Users can view their own pomodoro sessions
+CREATE POLICY "Users can view their own pomodoro sessions"
+  ON pomodoro_sessions FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- Policy: Users can insert their own pomodoro sessions
+CREATE POLICY "Users can insert their own pomodoro sessions"
+  ON pomodoro_sessions FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- Policy: Users can update their own pomodoro sessions
+CREATE POLICY "Users can update their own pomodoro sessions"
+  ON pomodoro_sessions FOR UPDATE
+  USING (auth.uid() = user_id);
+```
+
+**Session types:**
+- `work`: Focus session (default 25 minutes)
+- `break`: Rest session (default 5 minutes)
+
+**Features:**
+- Sessions can be linked to a specific book the user is reading
+- When a work session is active, the user's status is set to "reading" (purple indicator)
+- Completed sessions are tracked for potential statistics
 
 ## Data Flow
 
