@@ -72,7 +72,7 @@ export function PomodoroTimer({ books }: PomodoroTimerProps) {
   const previousStatusRef = useRef<string | null>(null);
   const notificationPermissionRef = useRef<NotificationPermission>("default");
 
-  // Load settings from localStorage
+  // Load settings from localStorage and reset status if needed
   useEffect(() => {
     const stored = localStorage.getItem(LOCAL_SETTINGS_KEY);
     if (stored) {
@@ -91,6 +91,15 @@ export function PomodoroTimer({ books }: PomodoroTimerProps) {
     // Check notification permission
     if ("Notification" in window) {
       notificationPermissionRef.current = Notification.permission;
+    }
+
+    // Reset status to online if user is in "reading" status but timer is idle
+    // This handles the case where page was refreshed during an active session
+    if (user && timerState === "idle") {
+      const currentStatus = getUserStatus(user.id);
+      if (currentStatus === "reading") {
+        setStatus("online");
+      }
     }
   }, []);
 
@@ -194,12 +203,11 @@ export function PomodoroTimer({ books }: PomodoroTimerProps) {
       showNotification("Work Session Complete!", "Time for a break.");
       toast.success("Work session complete! Time for a break.");
 
-      // Revert status to online after work session
+      // Revert status after work session (only if we changed it)
+      // If previousStatusRef is null, it means user was offline and we didn't change status
       if (previousStatusRef.current) {
         await setStatus(previousStatusRef.current as "online" | "offline");
         previousStatusRef.current = null;
-      } else {
-        await setStatus("online");
       }
     } else {
       showNotification("Break Over!", "Ready to focus?");
@@ -243,12 +251,23 @@ export function PomodoroTimer({ books }: PomodoroTimerProps) {
   const handleStart = async () => {
     await requestNotificationPermission();
 
-    // Set status to reading for work sessions
+    // Set status to reading for work sessions (only if not offline)
     if (sessionType === "work" && user) {
       const currentStatus = getUserStatus(user.id);
-      console.log("currentStatus", currentStatus);
-      previousStatusRef.current = currentStatus;
-      await setStatus("reading");
+
+      // Respect user's offline status - don't change it
+      if (currentStatus !== "offline") {
+        previousStatusRef.current = currentStatus;
+
+        // Save "online" to localStorage before changing to "reading"
+        // This ensures that if the page is closed/refreshed during the session,
+        // the status will restore to "online" instead of staying as "reading"
+        if (currentStatus === "online") {
+          localStorage.setItem("koinon_presence_status", "online");
+        }
+
+        await setStatus("reading");
+      }
     }
 
     // Create session in database
@@ -285,14 +304,11 @@ export function PomodoroTimer({ books }: PomodoroTimerProps) {
       setCurrentSessionId(null);
     }
 
-    // Revert status
-    if (sessionType === "work") {
-      if (previousStatusRef.current) {
-        await setStatus(previousStatusRef.current as "online" | "offline");
-        previousStatusRef.current = null;
-      } else {
-        await setStatus("online");
-      }
+    // Revert status (only if we changed it)
+    // If previousStatusRef is null, it means user was offline and we didn't change status
+    if (sessionType === "work" && previousStatusRef.current) {
+      await setStatus(previousStatusRef.current as "online" | "offline");
+      previousStatusRef.current = null;
     }
 
     setTimerState("idle");
