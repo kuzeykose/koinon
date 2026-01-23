@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { fetchFromOpenLibrary } from "@/lib/openlibrary";
 import { NextRequest, NextResponse } from "next/server";
 
 export interface WorkDetails {
@@ -20,7 +21,7 @@ async function getWorkFromOpenLibrary(
 ): Promise<WorkDetails | null> {
   try {
     // Fetch work details
-    const workResponse = await fetch(
+    const workResponse = await fetchFromOpenLibrary(
       `https://openlibrary.org/works/${workKey}.json`
     );
 
@@ -36,7 +37,7 @@ async function getWorkFromOpenLibrary(
       if (!authorKey) return null;
 
       try {
-        const authorResponse = await fetch(
+        const authorResponse = await fetchFromOpenLibrary(
           `https://openlibrary.org${authorKey}.json`
         );
         if (authorResponse.ok) {

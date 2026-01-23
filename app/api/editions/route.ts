@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { fetchFromOpenLibrary } from "@/lib/openlibrary";
 import { NextRequest, NextResponse } from "next/server";
 
 export interface BookEdition {
@@ -38,7 +39,7 @@ async function getEditionsFromOpenLibrary(
     );
 
     // Fetch work details to get title
-    const workResponse = await fetch(
+    const workResponse = await fetchFromOpenLibrary(
       `https://openlibrary.org/works/${workKey}.json`
     );
 
@@ -54,7 +55,7 @@ async function getEditionsFromOpenLibrary(
     const editionsUrl = `https://openlibrary.org/works/${workKey}/editions.json?offset=${offset}&limit=${limit}`;
     console.log(`Fetching editions from: ${editionsUrl}`);
 
-    const editionsResponse = await fetch(editionsUrl);
+    const editionsResponse = await fetchFromOpenLibrary(editionsUrl);
 
     if (!editionsResponse.ok) {
       console.error(`Editions fetch failed: ${editionsResponse.status}`);

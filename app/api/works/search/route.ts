@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { fetchFromOpenLibrary } from "@/lib/openlibrary";
 import { NextRequest, NextResponse } from "next/server";
 
 interface BookSearchResult {
@@ -27,7 +28,7 @@ async function searchWorksInOpenLibrary(
     url.searchParams.set("mode", "everything");
     url.searchParams.set("_spellcheck_count", "0");
 
-    const response = await fetch(url.toString());
+    const response = await fetchFromOpenLibrary(url);
 
     if (!response.ok) {
       console.error("Open Library API error:", response.status);
