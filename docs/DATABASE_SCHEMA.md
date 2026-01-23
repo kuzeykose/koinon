@@ -234,7 +234,8 @@ CREATE TABLE profiles (
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   -- Presence tracking
   last_seen TIMESTAMPTZ, -- Last activity timestamp (updated every ~30 seconds)
-  status TEXT DEFAULT 'offline' -- Current status: 'online', 'reading', 'offline'
+  status TEXT DEFAULT 'offline', -- Current status: 'online', 'reading', 'offline'
+  show_online_status BOOLEAN DEFAULT true, -- User preference: whether to show online status to others
   is_stats_public BOOLEAN DEFAULT false, -- Controls whether user's reading statistics are publicly viewable
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -242,6 +243,7 @@ CREATE TABLE profiles (
 -- Indexes for presence queries
 CREATE INDEX idx_profiles_last_seen ON profiles(last_seen);
 CREATE INDEX idx_profiles_status ON profiles(status);
+CREATE INDEX idx_profiles_show_online_status ON profiles(show_online_status);
 
 -- Enable RLS
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
@@ -317,6 +319,23 @@ CREATE INDEX IF NOT EXISTS idx_profiles_status ON profiles(status);
 - `online`: User is active on the site
 - `reading`: User has an active pomodoro timer
 - `offline`: User is inactive or manually set themselves invisible
+
+### Migration 015: Online Status Preference
+
+Adds a user preference to control online status visibility:
+
+```sql
+-- File: migrations/015_add_online_status_preference.sql
+
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS show_online_status BOOLEAN DEFAULT true;
+CREATE INDEX IF NOT EXISTS idx_profiles_show_online_status ON profiles(show_online_status);
+```
+
+**Online Status Preference (`show_online_status`):**
+- Controls whether the user wants to appear online to others
+- When `true` (default): User automatically appears online when active
+- When `false`: User always appears offline, regardless of activity
+- Can be toggled in Settings > Privacy Settings
 
 ## Notes
 

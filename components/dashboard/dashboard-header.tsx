@@ -52,13 +52,18 @@ export function DashboardHeader({
   const supabase = createClient();
   const { theme, setTheme } = useTheme();
   const { user } = useAuth();
-  const { getUserStatus, setStatus } = usePresence();
+  const { getUserStatus, setStatus, showOnlineStatus } = usePresence();
 
   const currentStatus = user ? getUserStatus(user.id) : "offline";
   const isOnline = currentStatus !== "offline";
 
   const handleStatusChange = async (nextStatus: "online" | "offline") => {
     if (nextStatus === currentStatus) return;
+    // If preference is disabled and trying to go online, block it
+    if (!showOnlineStatus && nextStatus === "online") {
+      toast.error("Enable 'Show Online Status' in settings first");
+      return;
+    }
     const didUpdate = await setStatus(nextStatus);
     if (didUpdate) {
       toast.success(
@@ -195,9 +200,11 @@ export function DashboardHeader({
                           "rounded-sm p-1.5 transition-colors",
                           isOnline
                             ? "bg-background shadow-sm"
-                            : "hover:bg-background/50"
+                            : "hover:bg-background/50",
+                          !showOnlineStatus && "opacity-50 cursor-not-allowed"
                         )}
-                        title="Online"
+                        title={showOnlineStatus ? "Online" : "Enable in settings"}
+                        disabled={!showOnlineStatus}
                       >
                         <Circle
                           className={cn(

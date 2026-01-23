@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/contexts/auth-context";
+import { usePresence } from "@/contexts/presence-context";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
@@ -20,9 +21,15 @@ import { Check, Copy, Loader2 } from "lucide-react";
 
 export default function SettingsPage() {
   const { user } = useAuth();
+  const {
+    showOnlineStatus,
+    updateOnlinePreference,
+    isLoading: isPresenceLoading,
+  } = usePresence();
   const [isPublic, setIsPublic] = useState(false);
   const [isStatsPublic, setIsStatsPublic] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isUpdatingOnlineStatus, setIsUpdatingOnlineStatus] = useState(false);
   const [username, setUsername] = useState("");
   const [originalUsername, setOriginalUsername] = useState("");
   const [usernameInput, setUsernameInput] = useState("");
@@ -183,6 +190,25 @@ export default function SettingsPage() {
     }
   };
 
+  // Handle toggle change for online status visibility
+  const handleToggleOnlineStatus = async (checked: boolean) => {
+    setIsUpdatingOnlineStatus(true);
+
+    const success = await updateOnlinePreference(checked);
+
+    setIsUpdatingOnlineStatus(false);
+
+    if (!success) {
+      toast.error("Failed to update online status preference");
+    } else {
+      toast.success(
+        checked
+          ? "You will now appear online when active"
+          : "You will appear offline to others"
+      );
+    }
+  };
+
   // Copy profile URL
   const copyProfileUrl = () => {
     const url = `${window.location.origin}/dashboard/profile/${username}`;
@@ -193,9 +219,8 @@ export default function SettingsPage() {
   };
 
   const profileUrl = username
-    ? `${
-        typeof window !== "undefined" ? window.location.origin : ""
-      }/dashboard/profile/${username}`
+    ? `${typeof window !== "undefined" ? window.location.origin : ""
+    }/dashboard/profile/${username}`
     : "";
 
   return (
@@ -252,8 +277,8 @@ export default function SettingsPage() {
                       usernameError
                         ? "border-destructive pr-10"
                         : isUsernameAvailable
-                        ? "border-green-500 pr-10"
-                        : ""
+                          ? "border-green-500 pr-10"
+                          : ""
                     }
                     disabled={isLoading}
                   />
@@ -326,6 +351,22 @@ export default function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="show-online-status" className="text-base">
+                  Show Online Status
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Allow others to see when you&apos;re online or reading
+                </p>
+              </div>
+              <Switch
+                id="show-online-status"
+                checked={showOnlineStatus}
+                onCheckedChange={handleToggleOnlineStatus}
+                disabled={isLoading || isPresenceLoading || isUpdatingOnlineStatus}
+              />
+            </div>
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="public-profile" className="text-base">

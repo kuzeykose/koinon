@@ -23,6 +23,8 @@ type PresenceContextType = {
   onlineUsers: Map<string, UserPresence>;
   getUserStatus: (userId: string) => UserStatus;
   setStatus: (status: UserStatus) => Promise<boolean>;
+  updateOnlinePreference: (enabled: boolean) => Promise<boolean>;
+  showOnlineStatus: boolean;
   isLoading: boolean;
 };
 
@@ -44,6 +46,8 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const supabase = createClient();
   const currentStatusRef = useRef<UserStatus | null>(null);
+  const showOnlineStatusRef = useRef<boolean>(true);
+  const [showOnlineStatus, setShowOnlineStatus] = useState(true);
   const [hasLoadedStatus, setHasLoadedStatus] = useState(false);
 
   // Update current user's presence (heartbeat)
@@ -67,9 +71,9 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, supabase]);
 
-  // Hydrate current status from localStorage preference or database
-  // localStorage stores the user's preferred status (online/reading)
-  // When user returns to the page, we restore their preference automatically
+  // Hydrate current status from database preference
+  // The show_online_status preference controls whether user wants to appear online
+  // When user returns to the page, we check their preference and set status accordingly
   useEffect(() => {
     let isActive = true;
 
@@ -89,25 +93,38 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
         // sessionStorage persists across refreshes but is cleared when browser/tab is closed
         const isRefresh = sessionStorage.getItem(SESSION_REFRESH_KEY);
 
-        // Check localStorage for stored status preference
-        // localStorage persists even after browser close
-        const storedPreference = localStorage.getItem(LOCAL_STATUS_KEY);
-
         if (isRefresh) {
-          // This is a refresh - just restore from localStorage preference
+          // This is a refresh - clear the flag
           sessionStorage.removeItem(SESSION_REFRESH_KEY);
         }
 
-        // If user has a stored preference (only "online" is saved), restore it
-        // "reading" is never saved to localStorage as it's a temporary session state
-        if (storedPreference === "online") {
-          currentStatusRef.current = storedPreference as UserStatus;
+        // Load user's online status preference from database
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("status, show_online_status")
+          .eq("id", user.id)
+          .single();
 
-          // Update the database with the restored status
+        if (error) {
+          console.error("Failed to load current status:", error);
+          return;
+        }
+
+        // Get the preference (default to true if not set)
+        const preferenceEnabled = profile?.show_online_status ?? true;
+        showOnlineStatusRef.current = preferenceEnabled;
+        if (isActive) {
+          setShowOnlineStatus(preferenceEnabled);
+        }
+
+        // If preference is disabled, force offline and don't change it
+        if (!preferenceEnabled) {
+          currentStatusRef.current = "offline";
+          // Ensure database reflects offline status
           await supabase
             .from("profiles")
             .update({
-              status: storedPreference,
+              status: "offline",
               last_seen: new Date().toISOString(),
             })
             .eq("id", user.id);
@@ -118,30 +135,21 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        // No stored preference or preference is offline - load from database
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("status")
-          .eq("id", user.id)
-          .single();
+        // Preference is enabled - set user to online when they open the app
+        currentStatusRef.current = "online";
+        localStorage.setItem(LOCAL_STATUS_KEY, "online");
 
-        if (error) {
-          console.error("Failed to load current status:", error);
-          return;
-        }
+        // Update database with online status
+        await supabase
+          .from("profiles")
+          .update({
+            status: "online",
+            last_seen: new Date().toISOString(),
+          })
+          .eq("id", user.id);
 
         if (isActive) {
-          const persistedStatus = data?.status as UserStatus | null;
-          if (
-            persistedStatus === "online" ||
-            persistedStatus === "reading" ||
-            persistedStatus === "offline"
-          ) {
-            currentStatusRef.current = persistedStatus;
-          } else {
-            // Default to offline until user explicitly opts in.
-            currentStatusRef.current = "offline";
-          }
+          setHasLoadedStatus(true);
         }
       } catch (error) {
         console.error("Failed to load current status:", error);
@@ -212,10 +220,18 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
 
   // Set current user's status
   const setStatus = useCallback(
-    async (status: UserStatus) => {
+    async (status: UserStatus, bypassPreferenceCheck = false) => {
       if (!user) return false;
 
       try {
+        // If trying to set online/reading but preference is disabled, block it
+        // Unless bypassing (used when updating the preference itself)
+        if (!bypassPreferenceCheck && status !== "offline") {
+          if (!showOnlineStatusRef.current) {
+            return false; // Don't allow setting online when preference is disabled
+          }
+        }
+
         const now = new Date().toISOString();
         const { data, error } = await supabase
           .from("profiles")
@@ -261,6 +277,45 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
       }
     },
     [user, supabase]
+  );
+
+  // Update online status preference
+  const updateOnlinePreference = useCallback(
+    async (enabled: boolean) => {
+      if (!user) return false;
+
+      try {
+        const { error } = await supabase
+          .from("profiles")
+          .update({ show_online_status: enabled })
+          .eq("id", user.id);
+
+        if (error) {
+          console.error("Failed to update online preference:", error);
+          return false;
+        }
+
+        // Update refs and state
+        showOnlineStatusRef.current = enabled;
+        setShowOnlineStatus(enabled);
+
+        // If disabling, set status to offline immediately
+        if (!enabled) {
+          await setStatus("offline", true);
+          localStorage.removeItem(LOCAL_STATUS_KEY);
+        } else {
+          // If enabling, set status to online
+          await setStatus("online", true);
+          localStorage.setItem(LOCAL_STATUS_KEY, "online");
+        }
+
+        return true;
+      } catch (error) {
+        console.error("Failed to update online preference:", error);
+        return false;
+      }
+    },
+    [user, supabase, setStatus]
   );
 
   // Set up heartbeat and fetch intervals
@@ -344,7 +399,14 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <PresenceContext.Provider
-      value={{ onlineUsers, getUserStatus, setStatus, isLoading }}
+      value={{
+        onlineUsers,
+        getUserStatus,
+        setStatus,
+        updateOnlinePreference,
+        showOnlineStatus,
+        isLoading,
+      }}
     >
       {children}
     </PresenceContext.Provider>
