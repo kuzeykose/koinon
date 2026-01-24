@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { fetchFromOpenLibrary } from "@/lib/openlibrary";
 import { NextRequest, NextResponse } from "next/server";
 
 export interface BookEditionDetails {
@@ -34,7 +35,7 @@ async function getBookEditionFromOpenLibrary(
 ): Promise<BookEditionDetails | null> {
   try {
     // Fetch edition details
-    const bookResponse = await fetch(
+    const bookResponse = await fetchFromOpenLibrary(
       `https://openlibrary.org/books/${bookKey}.json`
     );
 
@@ -48,7 +49,7 @@ async function getBookEditionFromOpenLibrary(
     const workKey = book.works?.[0]?.key?.replace("/works/", "") || null;
     let work = null;
     if (workKey) {
-      const workResponse = await fetch(
+      const workResponse = await fetchFromOpenLibrary(
         `https://openlibrary.org/works/${workKey}.json`
       );
       if (workResponse.ok) {
@@ -63,7 +64,7 @@ async function getBookEditionFromOpenLibrary(
       if (!authorKey) return null;
 
       try {
-        const authorResponse = await fetch(
+        const authorResponse = await fetchFromOpenLibrary(
           `https://openlibrary.org${authorKey}.json`
         );
         if (authorResponse.ok) {

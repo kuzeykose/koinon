@@ -88,23 +88,21 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
         // Check if this is a page refresh using sessionStorage
         // sessionStorage persists across refreshes but is cleared when browser/tab is closed
         const isRefresh = sessionStorage.getItem(SESSION_REFRESH_KEY);
-        
+
         // Check localStorage for stored status preference
         // localStorage persists even after browser close
         const storedPreference = localStorage.getItem(LOCAL_STATUS_KEY);
-        
+
         if (isRefresh) {
           // This is a refresh - just restore from localStorage preference
           sessionStorage.removeItem(SESSION_REFRESH_KEY);
         }
 
-        // If user has a stored preference (online/reading), restore it
-        if (
-          storedPreference === "online" ||
-          storedPreference === "reading"
-        ) {
+        // If user has a stored preference (only "online" is saved), restore it
+        // "reading" is never saved to localStorage as it's a temporary session state
+        if (storedPreference === "online") {
           currentStatusRef.current = storedPreference as UserStatus;
-          
+
           // Update the database with the restored status
           await supabase
             .from("profiles")
@@ -113,7 +111,7 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
               last_seen: new Date().toISOString(),
             })
             .eq("id", user.id);
-          
+
           if (isActive) {
             setHasLoadedStatus(true);
           }
@@ -236,13 +234,15 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
         currentStatusRef.current = status;
 
         // Store preference in localStorage
-        // When user sets online/reading, save it so we can restore on next visit
+        // Only save "online" as a preference - "reading" is temporary and session-based
         // When user sets offline, remove the preference
-        if (status === "online" || status === "reading") {
+        if (status === "online") {
           localStorage.setItem(LOCAL_STATUS_KEY, status);
-        } else {
+        } else if (status === "offline") {
           localStorage.removeItem(LOCAL_STATUS_KEY);
         }
+        // Note: "reading" status is NOT saved to localStorage because it's temporary
+        // and tied to an active pomodoro session
 
         // Update local state immediately
         setOnlineUsers((prev) => {
@@ -315,7 +315,7 @@ export function PresenceProvider({ children }: { children: React.ReactNode }) {
 
     const handleBeforeUnload = () => {
       const currentStatus = currentStatusRef.current;
-      
+
       // Mark that this is a refresh/navigation (sessionStorage persists on refresh)
       // This flag will be cleared when browser/tab is actually closed
       sessionStorage.setItem(SESSION_REFRESH_KEY, "true");
