@@ -2,18 +2,22 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen, Flame, Calendar, TrendingUp } from "lucide-react";
-import type { ReadingStats } from "@/lib/actions/stats-actions";
+import type { ReadingStats } from "@/lib/actions/stats";
 
 interface StatsOverviewProps {
   stats: ReadingStats;
 }
 
 export function StatsOverview({ stats }: StatsOverviewProps) {
+  const formatNumber = (num: number) => {
+    return num.toLocaleString("en-US");
+  };
+
   const statCards = [
     {
       title: "Total Pages Read",
-      value: stats.totalPagesRead.toLocaleString(),
-      description: `${stats.pagesThisMonth.toLocaleString()} this month`,
+      value: formatNumber(stats.totalPagesRead),
+      description: `${formatNumber(stats.pagesThisMonth)} this month`,
       icon: BookOpen,
       color: "text-blue-500",
       bgColor: "bg-blue-500/10",
@@ -36,7 +40,7 @@ export function StatsOverview({ stats }: StatsOverviewProps) {
     },
     {
       title: "This Week",
-      value: stats.pagesThisWeek.toLocaleString(),
+      value: formatNumber(stats.pagesThisWeek),
       description: "Pages read",
       icon: Calendar,
       color: "text-purple-500",
