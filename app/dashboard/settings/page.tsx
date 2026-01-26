@@ -12,16 +12,32 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { validateUsername } from "@/lib/utils";
 import { Check, Copy, Loader2 } from "lucide-react";
+import {
+  WEEK_START_DAYS,
+  WEEK_START_DAY_LABELS,
+  DEFAULT_WEEK_START_DAY,
+  type WeekStartDay,
+} from "@/lib/constants";
 
 export default function SettingsPage() {
   const { user } = useAuth();
   const [isPublic, setIsPublic] = useState(false);
   const [isStatsPublic, setIsStatsPublic] = useState(false);
+  const [weekStartDay, setWeekStartDay] = useState<WeekStartDay>(
+    DEFAULT_WEEK_START_DAY
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [username, setUsername] = useState("");
   const [originalUsername, setOriginalUsername] = useState("");
@@ -42,13 +58,16 @@ export default function SettingsPage() {
 
       const { data, error } = await supabase
         .from("profiles")
-        .select("is_public, is_stats_public, username")
+        .select("is_public, is_stats_public, username, week_start_day")
         .eq("id", user.id)
         .single();
 
       if (!error && data) {
         setIsPublic(data.is_public || false);
         setIsStatsPublic(data.is_stats_public || false);
+        setWeekStartDay(
+          (data.week_start_day as WeekStartDay) || DEFAULT_WEEK_START_DAY
+        );
         setUsername(data.username || "");
         setOriginalUsername(data.username || "");
         setUsernameInput(data.username || "");
@@ -180,6 +199,31 @@ export default function SettingsPage() {
           ? "Your statistics are now public"
           : "Your statistics are now private"
       );
+    }
+  };
+
+  const handleWeekStartDayChange = async (day: string) => {
+    if (!user?.id) return;
+
+    const dayValue = day as WeekStartDay;
+    if (!WEEK_START_DAYS.includes(dayValue)) {
+      toast.error("Invalid week start day value");
+      return;
+    }
+
+    const previousSelectedDay = weekStartDay;
+    setWeekStartDay(dayValue);
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ week_start_day: dayValue })
+      .eq("id", user.id);
+
+    if (error) {
+      setWeekStartDay(previousSelectedDay);
+      toast.error("Failed to update week start preference");
+    } else {
+      toast.success(`Week start changed to ${WEEK_START_DAY_LABELS[dayValue]}`);
     }
   };
 
@@ -318,7 +362,7 @@ export default function SettingsPage() {
         </Card>
 
         {/* Privacy Settings */}
-        <Card>
+        <Card className="mb-6">
           <CardHeader>
             <CardTitle>Privacy Settings</CardTitle>
             <CardDescription>
@@ -357,6 +401,41 @@ export default function SettingsPage() {
                 onCheckedChange={handleToggleStatsPublic}
                 disabled={isLoading}
               />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Statistics Settings</CardTitle>
+            <CardDescription>
+              Customize how your reading statistics are calculated
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6 my-6">
+            <div className="space-y-2">
+              <Label htmlFor="week-start" className="text-base">
+                Week Start Day
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Choose which day your week begins for &quot;This Week&quot; statistics
+              </p>
+              <Select
+                value={weekStartDay}
+                onValueChange={handleWeekStartDayChange}
+                disabled={isLoading}
+              >
+                <SelectTrigger id="week-start" className="w-[200px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {WEEK_START_DAYS.map((day) => (
+                    <SelectItem key={day} value={day}>
+                      {WEEK_START_DAY_LABELS[day]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>

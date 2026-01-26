@@ -53,7 +53,7 @@ export default async function StatisticsPage() {
             <StatsOverview stats={stats} />
 
             {/* Reading Activity Chart */}
-            <ReadingChart dailyActivity={stats.dailyActivity} />
+            <ReadingChart />
 
             <div className="grid gap-8 lg:grid-cols-2">
               {/* Streak Calendar */}
