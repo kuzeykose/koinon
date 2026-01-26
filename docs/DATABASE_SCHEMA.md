@@ -231,9 +231,10 @@ CREATE TABLE profiles (
   avatar_url TEXT,
   email TEXT, -- Optional: synced from auth.users for display ease, but keep in mind privacy
   is_public BOOLEAN DEFAULT false, -- Controls whether user's shelf is publicly viewable
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
   -- Presence tracking
   last_seen TIMESTAMPTZ, -- Last activity timestamp (updated every ~30 seconds)
-  status TEXT DEFAULT 'offline', -- Current status: 'online', 'reading', 'offline'
+  status TEXT DEFAULT 'offline' -- Current status: 'online', 'reading', 'offline'
   is_stats_public BOOLEAN DEFAULT false, -- Controls whether user's reading statistics are publicly viewable
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

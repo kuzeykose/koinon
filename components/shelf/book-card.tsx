@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -84,7 +84,6 @@ interface BookCardProps {
 }
 
 export function BookCard({ userBook, readOnly = false }: BookCardProps) {
-  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -93,13 +92,6 @@ export function BookCard({ userBook, readOnly = false }: BookCardProps) {
   const [progress, setProgress] = useState(userBook.progress || 0);
   const [capacity, setCapacity] = useState(userBook.capacity || 0);
   const [unit, setUnit] = useState(userBook.unit || "pages");
-
-  const handleBookClick = () => {
-    // Use book_key for navigation (Open Library key)
-    if (userBook.book_key) {
-      router.push(`/dashboard/book/${userBook.book_key}`);
-    }
-  };
 
   const displayStatus =
     readingStatuses[userBook.status as keyof typeof readingStatuses] ||
@@ -161,87 +153,90 @@ export function BookCard({ userBook, readOnly = false }: BookCardProps) {
 
   return (
     <div className="flex gap-4 items-center">
-      <div
-        className={`flex-shrink-0 w-12 h-16 bg-muted rounded overflow-hidden ${userBook.book_key ? "cursor-pointer hover:opacity-80 transition-opacity" : ""}`}
-        onClick={handleBookClick}
+      <Link
+        href={`/dashboard/book/${userBook.book_key}`}
+        className="flex gap-4 items-center flex-1 min-w-0 group"
       >
-        {userBook.cover ? (
-          <img
-            src={userBook.cover}
-            alt={userBook.title}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <BookOpen className="h-5 w-5 text-muted-foreground" />
-          </div>
-        )}
-      </div>
+        <div className="flex-shrink-0 w-12 h-16 bg-muted rounded overflow-hidden group-hover:opacity-80 transition-opacity">
+          {userBook.cover ? (
+            <img
+              src={userBook.cover}
+              alt={userBook.title}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <BookOpen className="h-5 w-5 text-muted-foreground" />
+            </div>
+          )}
+        </div>
 
-      <div
-        className={`flex-1 min-w-0 flex items-center gap-4 ${userBook.book_key ? "cursor-pointer" : ""}`}
-        onClick={handleBookClick}
-      >
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h4 className={`font-medium text-sm truncate ${userBook.book_key ? "hover:underline" : ""}`}>{userBook.title}</h4>
-            {/* Status badge for mobile - next to title */}
-            {displayStatus !== "Unknown" && (
-              <Badge
-                variant="secondary"
-                className="text-xs whitespace-nowrap md:hidden flex-shrink-0"
-              >
-                {displayStatus}
-              </Badge>
+        <div className="flex-1 min-w-0 flex items-center gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h4 className="font-medium text-sm truncate group-hover:underline">
+                {userBook.title}
+              </h4>
+              {/* Status badge for mobile - next to title */}
+              {displayStatus !== "Unknown" && (
+                <Badge
+                  variant="secondary"
+                  className="text-xs whitespace-nowrap md:hidden flex-shrink-0"
+                >
+                  {displayStatus}
+                </Badge>
+              )}
+            </div>
+            {authors && (
+              <p className="text-xs text-muted-foreground truncate">
+                {authors}
+              </p>
+            )}
+            {/* Progress bar for mobile - under author */}
+            {progressPercent > 0 && (
+              <div className="flex md:hidden items-center gap-2 mt-1">
+                <div className="flex-1 bg-muted rounded-full h-2">
+                  <div
+                    className="bg-emerald-500 h-2 rounded-full transition-all"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+                <span className="text-xs text-muted-foreground text-right whitespace-nowrap">
+                  {displayProgress || `${Math.round(progressPercent)}%`}
+                </span>
+              </div>
             )}
           </div>
-          {authors && (
-            <p className="text-xs text-muted-foreground truncate">{authors}</p>
-          )}
-          {/* Progress bar for mobile - under author */}
-          {progressPercent > 0 && (
-            <div className="flex md:hidden items-center gap-2 mt-1">
-              <div className="flex-1 bg-muted rounded-full h-2">
-                <div
-                  className="bg-emerald-500 h-2 rounded-full transition-all"
-                  style={{ width: `${progressPercent}%` }}
-                />
-              </div>
-              <span className="text-xs text-muted-foreground text-right whitespace-nowrap">
-                {displayProgress || `${Math.round(progressPercent)}%`}
-              </span>
-            </div>
-          )}
         </div>
+      </Link>
 
-        {/* Progress bar for desktop - on the right */}
-        {progressPercent > 0 && (
-          <div className="hidden md:flex items-center gap-2 w-32">
-            <div className="flex-1 bg-muted rounded-full h-2">
-              <div
-                className="bg-emerald-500 h-2 rounded-full transition-all"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-            <span className="text-xs text-muted-foreground w-10 text-right">
-              {Math.round(progressPercent)}%
-            </span>
+      {/* Progress bar for desktop - on the right */}
+      {progressPercent > 0 && (
+        <div className="hidden md:flex items-center gap-2 w-32">
+          <div className="flex-1 bg-muted rounded-full h-2">
+            <div
+              className="bg-emerald-500 h-2 rounded-full transition-all"
+              style={{ width: `${progressPercent}%` }}
+            />
           </div>
-        )}
-
-        {/* Badges for desktop */}
-        <div className="hidden md:flex items-center gap-2">
-          {displayStatus !== "Unknown" && (
-            <Badge variant="secondary" className="text-xs whitespace-nowrap">
-              {displayStatus}
-            </Badge>
-          )}
-          {displayProgress && (
-            <Badge variant="outline" className="text-xs whitespace-nowrap">
-              {displayProgress}
-            </Badge>
-          )}
+          <span className="text-xs text-muted-foreground w-10 text-right">
+            {Math.round(progressPercent)}%
+          </span>
         </div>
+      )}
+
+      {/* Badges for desktop */}
+      <div className="hidden md:flex items-center gap-2">
+        {displayStatus !== "Unknown" && (
+          <Badge variant="secondary" className="text-xs whitespace-nowrap">
+            {displayStatus}
+          </Badge>
+        )}
+        {displayProgress && (
+          <Badge variant="outline" className="text-xs whitespace-nowrap">
+            {displayProgress}
+          </Badge>
+        )}
       </div>
 
       {!readOnly && (
@@ -347,7 +342,7 @@ export function BookCard({ userBook, readOnly = false }: BookCardProps) {
                         style={{
                           width: `${Math.min(
                             (progress / capacity) * 100,
-                            100
+                            100,
                           )}%`,
                         }}
                       />
