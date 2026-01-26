@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -83,6 +84,7 @@ interface BookCardProps {
 }
 
 export function BookCard({ userBook, readOnly = false }: BookCardProps) {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -91,6 +93,13 @@ export function BookCard({ userBook, readOnly = false }: BookCardProps) {
   const [progress, setProgress] = useState(userBook.progress || 0);
   const [capacity, setCapacity] = useState(userBook.capacity || 0);
   const [unit, setUnit] = useState(userBook.unit || "pages");
+
+  const handleBookClick = () => {
+    // Use book_key for navigation (Open Library key)
+    if (userBook.book_key) {
+      router.push(`/dashboard/book/${userBook.book_key}`);
+    }
+  };
 
   const displayStatus =
     readingStatuses[userBook.status as keyof typeof readingStatuses] ||
@@ -152,7 +161,10 @@ export function BookCard({ userBook, readOnly = false }: BookCardProps) {
 
   return (
     <div className="flex gap-4 items-center">
-      <div className="flex-shrink-0 w-12 h-16 bg-muted rounded overflow-hidden">
+      <div
+        className={`flex-shrink-0 w-12 h-16 bg-muted rounded overflow-hidden ${userBook.book_key ? "cursor-pointer hover:opacity-80 transition-opacity" : ""}`}
+        onClick={handleBookClick}
+      >
         {userBook.cover ? (
           <img
             src={userBook.cover}
@@ -166,10 +178,13 @@ export function BookCard({ userBook, readOnly = false }: BookCardProps) {
         )}
       </div>
 
-      <div className="flex-1 min-w-0 flex items-center gap-4">
+      <div
+        className={`flex-1 min-w-0 flex items-center gap-4 ${userBook.book_key ? "cursor-pointer" : ""}`}
+        onClick={handleBookClick}
+      >
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h4 className="font-medium text-sm truncate">{userBook.title}</h4>
+            <h4 className={`font-medium text-sm truncate ${userBook.book_key ? "hover:underline" : ""}`}>{userBook.title}</h4>
             {/* Status badge for mobile - next to title */}
             {displayStatus !== "Unknown" && (
               <Badge
