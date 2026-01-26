@@ -157,7 +157,7 @@ export function BookCard({ userBook, readOnly = false }: BookCardProps) {
         href={`/dashboard/book/${userBook.book_key}`}
         className="flex gap-4 items-center flex-1 min-w-0 group"
       >
-        <div className="flex-shrink-0 w-12 h-16 bg-muted rounded overflow-hidden group-hover:opacity-80 transition-opacity">
+        <div className="flex-shrink-0 w-12 h-16 bg-muted rounded overflow-hidden transition-opacity">
           {userBook.cover ? (
             <img
               src={userBook.cover}
