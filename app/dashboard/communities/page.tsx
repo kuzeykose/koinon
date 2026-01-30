@@ -33,7 +33,8 @@ export default async function CommunitiesPage() {
         community_members!inner (
           role,
           user_id
-        )
+        ),
+        member_count:community_members(count)
       `
       )
       .eq("community_members.user_id", user.id);
@@ -42,7 +43,7 @@ export default async function CommunitiesPage() {
       communities = data.map((item: any) => ({
         ...item,
         user_role: item.community_members[0].role,
-        member_count: 1, // Placeholder
+        member_count: item.member_count[0]?.count || 0,
       }));
     }
   }
